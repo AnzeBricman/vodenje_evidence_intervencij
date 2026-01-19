@@ -6,15 +6,289 @@ datasource db {
   provider = "postgresql"
 }
 
-model User {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  role      Role     @default(USER)
-  createdAt DateTime @default(now())
+/* =========================
+   SIFRANTI / LOOKUP
+========================= */
+
+model vloga_v_aplikaciji {
+  id_vva Int @id @default(autoincrement())
+  ime    String @db.VarChar(200)
+  opis   String? @db.VarChar(200)
+
+  uporabniki uporabnik[]
+
+  @@map("vloga_v_aplikaciji")
 }
 
-enum Role {
-  ADMIN
-  USER
+model vloga_na_intervenciji {
+  id_vni   Int @id @default(autoincrement())
+  ime_vloge String @db.VarChar(200)
+  opis_vloge String? @db.VarChar(200)
+
+  intervencije_uporabnik intervencije_uporabnik[]
+
+  @@map("vloga_na_intervenciji")
+}
+
+model vloga_v_vozilu {
+  id_vvv   Int @id @default(autoincrement())
+  ime_vloge String @db.VarChar(200)
+  opis_vloge String? @db.VarChar(200)
+
+  intervencije_vozila_uporabniki intervencije_vozila_uporabniki[]
+
+  @@map("vloga_v_vozilu")
+}
+
+model status {
+  id_s        Int @id @default(autoincrement())
+  ime_statusa String @db.VarChar(200)
+  opis_statusa String? @db.VarChar(200)
+
+  intervencije intervencija[]
+
+  @@map("status")
+}
+
+model intervencija_tip {
+  id_it Int @id @default(autoincrement())
+  tip   String @db.VarChar(200)
+  opis  String? @db.VarChar(300)
+
+  intervencije intervencija[]
+
+  @@map("intervencija_tip")
+}
+
+model tip_casa {
+  id_tc Int @id @default(autoincrement())
+  ime_tipa String @db.VarChar(200)
+  cena_na_uro Decimal @db.Decimal(10,2)
+
+  intervencije intervencija[]
+
+  @@map("tip_casa")
+}
+
+model status_vozila {
+  id_sv Int @id @default(autoincrement())
+  ime_statusa String @db.VarChar(200)
+  opis_statusa String? @db.VarChar(200)
+
+  vozila vozilo[]
+
+  @@map("status_vozila")
+}
+
+model tip_vozila {
+  id_tv Int @id @default(autoincrement())
+  ime_tipa String @db.VarChar(200)
+  opis_tipa String? @db.VarChar(200)
+
+  vozila vozilo[]
+
+  @@map("tip_vozila")
+}
+
+model kategorija_oprema {
+  id_ko Int @id @default(autoincrement())
+  ime_kategorije String @db.VarChar(200)
+  opis_kategorije String? @db.VarChar(200)
+
+  oprema oprema[]
+
+  @@map("kategorija_oprema")
+}
+
+model stanje_opreme {
+  id_so Int @id @default(autoincrement())
+  ime_stanja String @db.VarChar(200)
+  opis_stanja String? @db.VarChar(200)
+
+  oprema oprema[]
+
+  @@map("stanje_opreme")
+}
+
+/* =========================
+   OSNOVNE ENTITETE
+========================= */
+
+model gasilni_dom {
+  id_gd Int @id @default(autoincrement())
+  ime String @db.VarChar(200)
+  kreirano DateTime? @db.Timestamp(6)
+
+  uporabniki uporabnik[]
+  intervencije intervencija[]
+  vozila vozilo[]
+  oprema oprema[]
+
+  @@map("gasilni_dom")
+}
+
+model uporabnik {
+  id_u Int @id @default(autoincrement())
+  email String @db.VarChar(200)
+  ime String @db.VarChar(200)
+  geslo String? @db.VarChar(255)
+  kreiran DateTime? @db.Timestamp(6)
+
+  id_gd Int
+  gasilni_dom gasilni_dom @relation(fields: [id_gd], references: [id_gd])
+
+  id_vva Int
+  vloga_v_aplikaciji vloga_v_aplikaciji @relation(fields: [id_vva], references: [id_vva])
+
+  intervencije_uporabnik intervencije_uporabnik[]
+  intervencije_vozila_uporabniki intervencije_vozila_uporabniki[]
+
+  @@unique([email])
+  @@index([id_gd])
+  @@index([id_vva])
+  @@map("uporabnik")
+}
+
+model intervencija {
+  id_i Int @id @default(autoincrement())
+  zap_st String @db.VarChar(50)
+  naslov String @db.VarChar(200)
+  lokacija String? @db.VarChar(200)
+
+  zacetek DateTime @db.Timestamp(6)
+  konec DateTime @db.Timestamp(6)
+
+  ustvarjeno DateTime? @db.Timestamp(6)
+  posodobljeno DateTime? @db.Timestamp(6)
+
+  trajanje_ur Decimal @db.Decimal(6,2)
+
+  id_it Int
+  intervencija_tip intervencija_tip @relation(fields: [id_it], references: [id_it])
+
+  id_s Int
+  status status @relation(fields: [id_s], references: [id_s])
+
+  id_tc Int
+  tip_casa tip_casa @relation(fields: [id_tc], references: [id_tc])
+
+  id_gd Int
+  gasilni_dom gasilni_dom @relation(fields: [id_gd], references: [id_gd])
+
+  intervencije_uporabnik intervencije_uporabnik[]
+  intervencije_vozila intervencije_vozila[]
+  intervencija_oprema intervencija_oprema[]
+
+  @@unique([zap_st])
+  @@map("intervencija")
+}
+
+model vozilo {
+  id_v Int @id @default(autoincrement())
+  ime String @db.VarChar(200)
+  registrska_st String? @db.VarChar(20)
+  opis String? @db.VarChar(200)
+
+  ustvarjeno DateTime? @db.Timestamp(6)
+  posodobljeno DateTime? @db.Timestamp(6)
+
+  id_sv Int
+  status_vozila status_vozila @relation(fields: [id_sv], references: [id_sv])
+
+  id_tv Int
+  tip_vozila tip_vozila @relation(fields: [id_tv], references: [id_tv])
+
+  id_gd Int
+  gasilni_dom gasilni_dom @relation(fields: [id_gd], references: [id_gd])
+
+  intervencije_vozila intervencije_vozila[]
+
+  @@unique([registrska_st])
+  @@map("vozilo")
+}
+
+model oprema {
+  id_o Int @id @default(autoincrement())
+  ime_opreme String @db.VarChar(200)
+  opis String? @db.VarChar(200)
+  ustvarjeno DateTime? @db.Timestamp(6)
+
+  id_ko Int
+  kategorija_oprema kategorija_oprema @relation(fields: [id_ko], references: [id_ko])
+
+  id_so Int
+  stanje_opreme stanje_opreme @relation(fields: [id_so], references: [id_so])
+
+  id_gd Int
+  gasilni_dom gasilni_dom @relation(fields: [id_gd], references: [id_gd])
+
+  intervencija_oprema intervencija_oprema[]
+
+  @@map("oprema")
+}
+
+/* =========================
+   POVEZOVALNE TABELE
+========================= */
+
+model intervencije_uporabnik {
+  id Int @id @default(autoincrement())
+
+  id_i Int
+  intervencija intervencija @relation(fields: [id_i], references: [id_i], onDelete: Cascade)
+
+  id_u Int
+  uporabnik uporabnik @relation(fields: [id_u], references: [id_u])
+
+  id_vni Int
+  vloga_na_intervenciji vloga_na_intervenciji @relation(fields: [id_vni], references: [id_vni])
+
+  @@unique([id_i, id_u])
+  @@map("intervencije_uporabnik")
+}
+
+model intervencije_vozila {
+  id_iv Int @id @default(autoincrement())
+
+  id_v Int
+  vozilo vozilo @relation(fields: [id_v], references: [id_v])
+
+  id_i Int
+  intervencija intervencija @relation(fields: [id_i], references: [id_i], onDelete: Cascade)
+
+  intervencije_vozila_uporabniki intervencije_vozila_uporabniki[]
+
+  @@map("intervencije_vozila")
+}
+
+model intervencije_vozila_uporabniki {
+  id_ivu Int @id @default(autoincrement())
+
+  id_iv Int
+  intervencije_vozila intervencije_vozila @relation(fields: [id_iv], references: [id_iv], onDelete: Cascade)
+
+  id_u Int
+  uporabnik uporabnik @relation(fields: [id_u], references: [id_u])
+
+  id_vvv Int
+  vloga_v_vozilu vloga_v_vozilu @relation(fields: [id_vvv], references: [id_vvv])
+
+  @@unique([id_iv, id_u])
+  @@map("intervencije_vozila_uporabniki")
+}
+
+model intervencija_oprema {
+  id_io Int @id @default(autoincrement())
+
+  id_o Int
+  oprema oprema @relation(fields: [id_o], references: [id_o])
+
+  id_i Int
+  intervencija intervencija @relation(fields: [id_i], references: [id_i], onDelete: Cascade)
+
+  kolicina Int
+  ure_uporabe Decimal @db.Decimal(6,2)
+  strosek Decimal @db.Decimal(12,2)
+
+  @@map("intervencija_oprema")
 }
