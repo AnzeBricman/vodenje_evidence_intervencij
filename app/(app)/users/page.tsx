@@ -1,12 +1,12 @@
 import PageHeader from "@/components/common/page-header";
 import { prisma } from "@/lib/prisma";
-import { getDevGdId } from "@/lib/gd";
+import { requirePermission } from "@/lib/auth-guards";
 
 export default async function UsersPage() {
-  const gdId = getDevGdId();
+  const user = await requirePermission("USER_MANAGE"); 
 
   const users = await prisma.uporabnik.findMany({
-    where: { id_gd: gdId },
+    where: { id_gd: user.id_gd },
     include: { vloga_v_aplikaciji: true },
     orderBy: { ime: "asc" },
   });

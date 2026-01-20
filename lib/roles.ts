@@ -1,0 +1,28 @@
+export const ROLES = {
+  ADMIN: "ADMIN",
+  POVELJNIK: "POVELJNIK",
+  CLAN: "CLAN",
+  UPORABNIK: "UPORABNIK",
+} as const;
+
+export type Role = typeof ROLES[keyof typeof ROLES];
+
+export const ROLE_LABEL: Record<Role, string> = {
+  ADMIN: "Administrator",
+  POVELJNIK: "Poveljnik",
+  CLAN: "Gasilec",
+  UPORABNIK: "Uporabnik",
+};
+
+export const PERMISSIONS = {
+  INTERVENTION_VIEW: [ROLES.ADMIN, ROLES.POVELJNIK, ROLES.CLAN],
+  INTERVENTION_CREATE: [ROLES.ADMIN, ROLES.POVELJNIK],
+  INTERVENTION_EDIT: [ROLES.ADMIN, ROLES.POVELJNIK],
+  INTERVENTION_DELETE: [ROLES.ADMIN],
+
+  VEHICLE_MANAGE: [ROLES.ADMIN, ROLES.POVELJNIK],
+  EQUIPMENT_MANAGE: [ROLES.ADMIN, ROLES.POVELJNIK],
+  USER_MANAGE: [ROLES.ADMIN],
+} as const;
+
+export type Permission = keyof typeof PERMISSIONS;
