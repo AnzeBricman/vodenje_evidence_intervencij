@@ -104,13 +104,12 @@ export default function Sidebar() {
             </div>
           </div>
         </div>
-
-        <button
-          className="mt-4 text-sm text-gray-600 hover:text-gray-900"
-          onClick={() => signOut({ callbackUrl: "/login" })}
-        >
-          Odjava
-        </button>
+      <button
+        className="mt-4 text-sm text-gray-600 hover:text-gray-900"
+        onClick={() => signOut({ callbackUrl: "/" })}
+      >
+        Odjava
+      </button>
       </div>
     </div>
   );
