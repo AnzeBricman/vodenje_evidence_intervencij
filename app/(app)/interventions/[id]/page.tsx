@@ -1,4 +1,3 @@
-import PageHeader from "@/components/common/page-header";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -13,6 +12,14 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: "vozila", label: "Vozila" },
   { key: "stroski", label: "Stroški" },
 ];
+
+// Helper za € format (vedno na voljo v tej datoteki)
+function eur(n: number) {
+  return new Intl.NumberFormat("sl-SI", {
+    style: "currency",
+    currency: "EUR",
+  }).format(n);
+}
 
 export default async function InterventionDetailPage({
   params,
@@ -60,16 +67,32 @@ export default async function InterventionDetailPage({
         orderBy: { id_iv: "asc" },
       },
 
+      intervencija_oprema: {
+        include: {
+          oprema: {
+            include: { kategorija_oprema: true },
+          },
+        },
+        orderBy: { id_io: "asc" },
+      },
     },
   });
 
   if (!intervencija) notFound();
 
+  // -------------------------
+  // COUNTS + BASIC
+  // -------------------------
+  const trajanje = Number(intervencija.trajanje_ur ?? 0); // ure
+  const skupneUre = trajanje.toFixed(2);
+
   const claniCount = intervencija.intervencije_uporabnik.length;
   const vozilaCount = intervencija.intervencije_vozila.length;
-  const opremaCount = 0;
-  const skupneUre = Number(intervencija.trajanje_ur ?? 0).toFixed(2);
+  const opremaCount = intervencija.intervencija_oprema.length;
 
+  // -------------------------
+  // NEDODELJENI (prisotnost)
+  // -------------------------
   const inVehicleUserIds = new Set(
     intervencija.intervencije_vozila.flatMap((iv) =>
       iv.intervencije_vozila_uporabniki.map((x) => x.id_u)
@@ -80,12 +103,52 @@ export default async function InterventionDetailPage({
     (x) => !inVehicleUserIds.has(x.id_u)
   );
 
+  // -------------------------
+  // STROŠKI (izračun)
+  // -------------------------
+  const cenaTipaCasa = Number(intervencija.tip_casa?.cena_na_uro ?? 0);
+
+  // Moštvo
+  const stroskiMostvo = claniCount * trajanje * cenaTipaCasa;
+
+  // Vozila (predpostavka: celo intervencijo)
+  const vozilaRows = intervencija.intervencije_vozila.map((iv) => {
+    // IMPORTANT: prilagodi ime polja, če ni "cena_na_uro"
+    const cenaVozila = Number((iv.vozilo as any).cena_na_uro ?? 0);
+    const strosek = trajanje * cenaVozila;
+    return { iv, cenaVozila, strosek };
+  });
+  const stroskiVozila = vozilaRows.reduce((s, r) => s + r.strosek, 0);
+
+  // Oprema (kolicina * ure * cena_na_uro)
+  const opremaRows = intervencija.intervencija_oprema.map((io) => {
+    // IMPORTANT: prilagodi ime polja, če ni "cena_na_uro"
+    const cenaOpreme = Number((io.oprema as any).cena_na_uro ?? 0);
+    const ure = Number(io.ure_uporabe ?? 0);
+    const kolicina = Number(io.kolicina ?? 0);
+
+    // Če želiš uporabljati STOREK iz baze, daj:
+    // const strosek = Number(io.strosek ?? 0);
+
+    // Če želiš kalkulacijo:
+    const strosek = kolicina * ure * cenaOpreme;
+
+    return { io, cenaOpreme, ure, kolicina, strosek };
+  });
+  const stroskiOprema = opremaRows.reduce((s, r) => s + r.strosek, 0);
+
+  // Skupaj
+  const skupniStroski = stroskiMostvo + stroskiVozila + stroskiOprema;
+
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-6">
         <div className="space-y-2">
           <div className="text-sm text-gray-500">
-            <Link href="/interventions" className="inline-flex items-center gap-2 hover:underline">
+            <Link
+              href="/interventions"
+              className="inline-flex items-center gap-2 hover:underline"
+            >
               ← Nazaj na seznam
             </Link>
           </div>
@@ -105,6 +168,7 @@ export default async function InterventionDetailPage({
 
       <div className="grid gap-6 xl:grid-cols-4">
         <div className="xl:col-span-3 space-y-4">
+          {/* TAB BAR */}
           <div className="inline-flex rounded-xl border bg-white p-1">
             {TABS.map((t) => {
               const active = tab === t.key;
@@ -114,7 +178,9 @@ export default async function InterventionDetailPage({
                   href={`/interventions/${intervencija.id_i}?tab=${t.key}`}
                   className={[
                     "rounded-lg px-4 py-2 text-sm transition",
-                    active ? "bg-gray-100 font-medium" : "text-gray-600 hover:bg-gray-50",
+                    active
+                      ? "bg-gray-100 font-medium"
+                      : "text-gray-600 hover:bg-gray-50",
                   ].join(" ")}
                 >
                   {t.label}
@@ -123,11 +189,15 @@ export default async function InterventionDetailPage({
             })}
           </div>
 
+          {/* OSNOVNO */}
           {tab === "osnovno" && (
             <SectionCard title="Osnovni podatki">
               <div className="grid gap-4 sm:grid-cols-2">
                 <Info label="Številka intervencije" value={intervencija.zap_st} />
-                <Info label="Vrsta" value={intervencija.intervencija_tip?.tip ?? "—"} />
+                <Info
+                  label="Vrsta"
+                  value={intervencija.intervencija_tip?.tip ?? "—"}
+                />
                 <Info
                   label="Začetek"
                   value={new Date(intervencija.zacetek).toLocaleString("sl-SI")}
@@ -136,12 +206,16 @@ export default async function InterventionDetailPage({
                   label="Konec"
                   value={new Date(intervencija.konec).toLocaleString("sl-SI")}
                 />
-                <Info label="Tip časa" value={intervencija.tip_casa?.ime_tipa ?? "—"} />
-                <Info label="Trajanje" value={`${Number(intervencija.trajanje_ur).toFixed(2)} h`} />
+                <Info
+                  label="Tip časa"
+                  value={intervencija.tip_casa?.ime_tipa ?? "—"}
+                />
+                <Info label="Trajanje" value={`${trajanje.toFixed(2)} h`} />
               </div>
             </SectionCard>
           )}
 
+          {/* PRISOTNOST */}
           {tab === "prisotnost" && (
             <div className="grid gap-6 xl:grid-cols-2">
               <SectionCard
@@ -160,9 +234,7 @@ export default async function InterventionDetailPage({
                       <div key={p.id} className="flex items-center justify-between py-3">
                         <div className="min-w-0">
                           <div className="text-sm font-medium">{p.uporabnik.ime}</div>
-                          <div className="text-xs text-gray-500">
-                            {p.uporabnik.email}
-                          </div>
+                          <div className="text-xs text-gray-500">{p.uporabnik.email}</div>
                         </div>
                         <span className="rounded-full border px-3 py-1 text-xs text-gray-700">
                           {p.vloga_na_intervenciji?.ime_vloge ?? "—"}
@@ -219,32 +291,144 @@ export default async function InterventionDetailPage({
             </div>
           )}
 
+          {/* OPREMA */}
           {tab === "oprema" && (
-            <SectionCard title="Oprema">
-              <Empty text="(Zaenkrat) Tukaj bo izpis porabljene opreme na intervenciji." />
+            <SectionCard
+              title={`Oprema (${opremaCount})`}
+              subtitle="Porabljena oprema na intervenciji"
+            >
+              {opremaCount === 0 ? (
+                <Empty text="Ni vpisane opreme." />
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b text-left text-xs text-gray-500">
+                        <th className="py-2 pr-4">Oprema</th>
+                        <th className="py-2 pr-4">Kategorija</th>
+                        <th className="py-2 pr-4">Količina</th>
+                        <th className="py-2 pr-4">Ure</th>
+                        <th className="py-2 pr-4">Cena/uro</th>
+                        <th className="py-2 pr-0 text-right">Strošek</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {opremaRows.map((r) => (
+                        <tr key={r.io.id_io} className="border-b last:border-b-0">
+                          <td className="py-3 pr-4 font-medium">
+                            {r.io.oprema.ime_opreme}
+                          </td>
+                          <td className="py-3 pr-4 text-gray-500">
+                            {r.io.oprema.kategorija_oprema?.ime_kategorije ?? "—"}
+                          </td>
+                          <td className="py-3 pr-4">{r.kolicina}</td>
+                          <td className="py-3 pr-4">{r.ure.toFixed(2)}</td>
+                          <td className="py-3 pr-4">{eur(r.cenaOpreme)}</td>
+                          <td className="py-3 pr-0 text-right font-semibold">
+                            {eur(r.strosek)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr className="border-t">
+                        <td colSpan={5} className="py-3 pr-4 text-right text-gray-600">
+                          Skupaj oprema
+                        </td>
+                        <td className="py-3 pr-0 text-right font-semibold">
+                          {eur(stroskiOprema)}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              )}
             </SectionCard>
           )}
 
+          {/* VOZILA */}
           {tab === "vozila" && (
             <SectionCard title="Vozila">
-              <Empty text="(Zaenkrat) Tukaj bo podrobnejši izpis vozil (servis, status, oprema v vozilu…)."/>
+              <Empty text="Če boš vozila prikazoval že pod Prisotnost, lahko ta tab skriješ ali uporabiš za Phase 2." />
             </SectionCard>
           )}
 
+          {/* STROŠKI */}
           {tab === "stroski" && (
-            <SectionCard title="Stroški">
-              <Empty text="(Zaenkrat) Tukaj pride izračun: moštvo + oprema + vozila." />
+            <SectionCard title="Stroški" subtitle="Moštvo + vozila + oprema">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-left text-xs text-gray-500">
+                      <th className="py-2 pr-4">Postavka</th>
+                      <th className="py-2 pr-4">Opis</th>
+                      <th className="py-2 pr-0 text-right">Strošek</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    <tr className="border-b">
+                      <td className="py-3 pr-4 font-medium">Moštvo</td>
+                      <td className="py-3 pr-4 text-gray-500">
+                        {claniCount} član(ov) × {trajanje.toFixed(2)} h ×{" "}
+                        {eur(cenaTipaCasa)}/h ({intervencija.tip_casa?.ime_tipa})
+                      </td>
+                      <td className="py-3 pr-0 text-right font-semibold">
+                        {eur(stroskiMostvo)}
+                      </td>
+                    </tr>
+
+                    {vozilaRows.map((r) => (
+                      <tr key={`v-${r.iv.id_iv}`} className="border-b">
+                        <td className="py-3 pr-4 font-medium">Vozilo</td>
+                        <td className="py-3 pr-4 text-gray-500">
+                          {r.iv.vozilo.ime} × {trajanje.toFixed(2)} h ×{" "}
+                          {eur(r.cenaVozila)}/h
+                        </td>
+                        <td className="py-3 pr-0 text-right font-semibold">
+                          {eur(r.strosek)}
+                        </td>
+                      </tr>
+                    ))}
+
+                    {opremaRows.map((r) => (
+                      <tr key={`o-${r.io.id_io}`} className="border-b">
+                        <td className="py-3 pr-4 font-medium">Oprema</td>
+                        <td className="py-3 pr-4 text-gray-500">
+                          {r.io.oprema.ime_opreme} — {r.kolicina} kos ×{" "}
+                          {r.ure.toFixed(2)} h × {eur(r.cenaOpreme)}/h
+                        </td>
+                        <td className="py-3 pr-0 text-right font-semibold">
+                          {eur(r.strosek)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+
+                  <tfoot>
+                    <tr className="border-t">
+                      <td colSpan={2} className="py-3 pr-4 text-right text-gray-600">
+                        Skupaj
+                      </td>
+                      <td className="py-3 pr-0 text-right font-semibold">
+                        {eur(skupniStroski)}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
             </SectionCard>
           )}
         </div>
 
+        {/* POVZETEK */}
         <div className="xl:col-span-1">
           <div className="rounded-xl border bg-white p-5">
             <div className="mb-4 text-sm font-semibold">Povzetek</div>
 
             <div className="space-y-3">
               <Kpi label="Skupne ure" value={`${skupneUre} h`} />
-              <Kpi label="Skupni stroški" value="— €" />
+              <Kpi label="Skupni stroški" value={eur(skupniStroski)} />
 
               <div className="my-3 border-t" />
 
@@ -259,7 +443,6 @@ export default async function InterventionDetailPage({
   );
 }
 
-
 function SectionCard({
   title,
   subtitle,
@@ -273,7 +456,7 @@ function SectionCard({
     <div className="rounded-xl border bg-white p-5">
       <div className="mb-4">
         <div className="text-sm font-semibold">{title}</div>
-        {subtitle && <div className="text-xs text-gray-500 mt-1">{subtitle}</div>}
+        {subtitle && <div className="mt-1 text-xs text-gray-500">{subtitle}</div>}
       </div>
       {children}
     </div>

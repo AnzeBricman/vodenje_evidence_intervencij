@@ -188,6 +188,7 @@ model vozilo {
   ime String @db.VarChar(200)
   registrska_st String? @db.VarChar(20)
   opis String? @db.VarChar(200)
+  cena_na_uro Decimal @db.Decimal(10,2) @default(0)
 
   ustvarjeno DateTime? @db.Timestamp(6)
   posodobljeno DateTime? @db.Timestamp(6)
@@ -212,6 +213,7 @@ model oprema {
   ime_opreme String @db.VarChar(200)
   opis String? @db.VarChar(200)
   ustvarjeno DateTime? @db.Timestamp(6)
+  cena_na_uro Decimal @db.Decimal(10,2) @default(0)
 
   id_ko Int
   kategorija_oprema kategorija_oprema @relation(fields: [id_ko], references: [id_ko])
