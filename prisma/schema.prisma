@@ -11,7 +11,7 @@ datasource db {
 ========================= */
 
 model vloga_v_aplikaciji {
-  id_vva Int @id @default(autoincrement())
+  id_vva Int    @id @default(autoincrement())
   ime    String @db.VarChar(200)
   opis   String? @db.VarChar(200)
 
@@ -21,8 +21,8 @@ model vloga_v_aplikaciji {
 }
 
 model vloga_na_intervenciji {
-  id_vni   Int @id @default(autoincrement())
-  ime_vloge String @db.VarChar(200)
+  id_vni     Int    @id @default(autoincrement())
+  ime_vloge  String @db.VarChar(200)
   opis_vloge String? @db.VarChar(200)
 
   intervencije_uporabnik intervencije_uporabnik[]
@@ -31,8 +31,8 @@ model vloga_na_intervenciji {
 }
 
 model vloga_v_vozilu {
-  id_vvv   Int @id @default(autoincrement())
-  ime_vloge String @db.VarChar(200)
+  id_vvv     Int    @id @default(autoincrement())
+  ime_vloge  String @db.VarChar(200)
   opis_vloge String? @db.VarChar(200)
 
   intervencije_vozila_uporabniki intervencije_vozila_uporabniki[]
@@ -41,8 +41,8 @@ model vloga_v_vozilu {
 }
 
 model status {
-  id_s        Int @id @default(autoincrement())
-  ime_statusa String @db.VarChar(200)
+  id_s         Int    @id @default(autoincrement())
+  ime_statusa  String @db.VarChar(200)
   opis_statusa String? @db.VarChar(200)
 
   intervencije intervencija[]
@@ -51,7 +51,7 @@ model status {
 }
 
 model intervencija_tip {
-  id_it Int @id @default(autoincrement())
+  id_it Int    @id @default(autoincrement())
   tip   String @db.VarChar(200)
   opis  String? @db.VarChar(300)
 
@@ -61,8 +61,8 @@ model intervencija_tip {
 }
 
 model tip_casa {
-  id_tc Int @id @default(autoincrement())
-  ime_tipa String @db.VarChar(200)
+  id_tc       Int     @id @default(autoincrement())
+  ime_tipa    String  @db.VarChar(200)
   cena_na_uro Decimal @db.Decimal(10,2)
 
   intervencije intervencija[]
@@ -71,8 +71,8 @@ model tip_casa {
 }
 
 model status_vozila {
-  id_sv Int @id @default(autoincrement())
-  ime_statusa String @db.VarChar(200)
+  id_sv        Int    @id @default(autoincrement())
+  ime_statusa  String @db.VarChar(200)
   opis_statusa String? @db.VarChar(200)
 
   vozila vozilo[]
@@ -81,8 +81,8 @@ model status_vozila {
 }
 
 model tip_vozila {
-  id_tv Int @id @default(autoincrement())
-  ime_tipa String @db.VarChar(200)
+  id_tv     Int    @id @default(autoincrement())
+  ime_tipa  String @db.VarChar(200)
   opis_tipa String? @db.VarChar(200)
 
   vozila vozilo[]
@@ -91,8 +91,8 @@ model tip_vozila {
 }
 
 model kategorija_oprema {
-  id_ko Int @id @default(autoincrement())
-  ime_kategorije String @db.VarChar(200)
+  id_ko           Int    @id @default(autoincrement())
+  ime_kategorije  String @db.VarChar(200)
   opis_kategorije String? @db.VarChar(200)
 
   oprema oprema[]
@@ -101,7 +101,7 @@ model kategorija_oprema {
 }
 
 model stanje_opreme {
-  id_so Int @id @default(autoincrement())
+  id_so      Int    @id @default(autoincrement())
   ime_stanja String @db.VarChar(200)
   opis_stanja String? @db.VarChar(200)
 
@@ -110,28 +110,63 @@ model stanje_opreme {
   @@map("stanje_opreme")
 }
 
+/* ===== NOVI ŠIFRANTI (brez enum) ===== */
+
+model dokument_tip {
+  id_dt Int @id @default(autoincrement())
+
+  naziv String  @db.VarChar(200)
+  opis  String? @db.VarChar(300)
+
+  oprema_dokumenti oprema_dokument[]
+
+  @@map("dokument_tip")
+}
+
+model servis_status {
+  id_ss Int @id @default(autoincrement())
+
+  naziv String  @db.VarChar(100) // npr. OPRAVLJEN, PLANIRAN
+  opis  String? @db.VarChar(200)
+
+  oprema_servisi oprema_servis[]
+
+  @@map("servis_status")
+}
+
+model incident_status {
+  id_is Int @id @default(autoincrement())
+
+  naziv String  @db.VarChar(100) // npr. ODPRT, V_RESEVANJU, ZAKLJUCEN
+  opis  String? @db.VarChar(200)
+
+  oprema_incidenti oprema_incident[]
+
+  @@map("incident_status")
+}
+
 /* =========================
    OSNOVNE ENTITETE
 ========================= */
 
 model gasilni_dom {
-  id_gd Int @id @default(autoincrement())
-  ime String @db.VarChar(200)
+  id_gd    Int       @id @default(autoincrement())
+  ime      String    @db.VarChar(200)
   kreirano DateTime? @db.Timestamp(6)
 
-  uporabniki uporabnik[]
+  uporabniki   uporabnik[]
   intervencije intervencija[]
-  vozila vozilo[]
-  oprema oprema[]
+  vozila       vozilo[]
+  oprema       oprema[]
 
   @@map("gasilni_dom")
 }
 
 model uporabnik {
-  id_u Int @id @default(autoincrement())
-  email String @db.VarChar(200)
-  ime String @db.VarChar(200)
-  geslo String? @db.VarChar(255)
+  id_u    Int       @id @default(autoincrement())
+  email   String    @db.VarChar(200)
+  ime     String    @db.VarChar(200)
+  geslo   String?   @db.VarChar(255)
   kreiran DateTime? @db.Timestamp(6)
 
   id_gd Int
@@ -140,8 +175,12 @@ model uporabnik {
   id_vva Int
   vloga_v_aplikaciji vloga_v_aplikaciji @relation(fields: [id_vva], references: [id_vva])
 
-  intervencije_uporabnik intervencije_uporabnik[]
+  intervencije_uporabnik         intervencije_uporabnik[]
   intervencije_vozila_uporabniki intervencije_vozila_uporabniki[]
+
+  oprema_dokumenti oprema_dokument[] @relation("OpremaDokumentUploader")
+  oprema_servisi   oprema_servis[]   @relation("OpremaServisUstvaril")
+  oprema_incidenti oprema_incident[] @relation("OpremaIncidentPrijavil")
 
   @@unique([email])
   @@index([id_gd])
@@ -150,15 +189,15 @@ model uporabnik {
 }
 
 model intervencija {
-  id_i Int @id @default(autoincrement())
-  zap_st String @db.VarChar(50)
-  naslov String @db.VarChar(200)
+  id_i     Int    @id @default(autoincrement())
+  zap_st   String @db.VarChar(50)
+  naslov   String @db.VarChar(200)
   lokacija String? @db.VarChar(200)
 
   zacetek DateTime @db.Timestamp(6)
-  konec DateTime @db.Timestamp(6)
+  konec   DateTime @db.Timestamp(6)
 
-  ustvarjeno DateTime? @db.Timestamp(6)
+  ustvarjeno   DateTime? @db.Timestamp(6)
   posodobljeno DateTime? @db.Timestamp(6)
 
   trajanje_ur Decimal @db.Decimal(6,2)
@@ -176,21 +215,25 @@ model intervencija {
   gasilni_dom gasilni_dom @relation(fields: [id_gd], references: [id_gd])
 
   intervencije_uporabnik intervencije_uporabnik[]
-  intervencije_vozila intervencije_vozila[]
-  intervencija_oprema intervencija_oprema[]
+  intervencije_vozila    intervencije_vozila[]
+  intervencija_oprema    intervencija_oprema[]
+
+  // ✅ nasprotno polje za oprema_incident.intervencija
+  oprema_incidenti oprema_incident[]
 
   @@unique([zap_st])
+  @@index([id_gd])
   @@map("intervencija")
 }
 
 model vozilo {
-  id_v Int @id @default(autoincrement())
-  ime String @db.VarChar(200)
+  id_v          Int     @id @default(autoincrement())
+  ime           String  @db.VarChar(200)
   registrska_st String? @db.VarChar(20)
-  opis String? @db.VarChar(200)
-  cena_na_uro Decimal @db.Decimal(10,2) @default(0)
+  opis          String? @db.VarChar(200)
+  cena_na_uro   Decimal @db.Decimal(10,2) @default(0)
 
-  ustvarjeno DateTime? @db.Timestamp(6)
+  ustvarjeno   DateTime? @db.Timestamp(6)
   posodobljeno DateTime? @db.Timestamp(6)
 
   id_sv Int
@@ -204,16 +247,37 @@ model vozilo {
 
   intervencije_vozila intervencije_vozila[]
 
+  // oprema dodeljena vozilu
+  oprema_dodeljena oprema[] @relation("OpremaVoziloDodeljeno")
+
   @@unique([registrska_st])
+  @@index([id_gd])
   @@map("vozilo")
 }
 
 model oprema {
   id_o Int @id @default(autoincrement())
-  ime_opreme String @db.VarChar(200)
-  opis String? @db.VarChar(200)
-  ustvarjeno DateTime? @db.Timestamp(6)
-  cena_na_uro Decimal @db.Decimal(10,2) @default(0)
+
+  // ✅ QR stabilen ID: najprej nullable (da migracija ne pade na obstoječih vrsticah)
+  public_uid String? @db.VarChar(64)
+
+  ime_opreme String  @db.VarChar(200)
+  opis       String? @db.VarChar(200)
+
+  serijska_st  String?   @db.VarChar(80)
+  datum_nakupa DateTime? @db.Date
+  leto_nabave  Int?
+
+  ustvarjeno  DateTime? @db.Timestamp(6)
+  cena_na_uro Decimal   @db.Decimal(10,2) @default(0)
+
+  // servisni urnik
+  servis_interval_ur  Decimal? @db.Decimal(10,2) // npr. 50
+  servis_interval_dni Int?     // npr. 365
+
+  // dodeljeno vozilo
+  id_v_dodeljeno Int?
+  vozilo_dodeljeno vozilo? @relation("OpremaVoziloDodeljeno", fields: [id_v_dodeljeno], references: [id_v])
 
   id_ko Int
   kategorija_oprema kategorija_oprema @relation(fields: [id_ko], references: [id_ko])
@@ -224,8 +288,15 @@ model oprema {
   id_gd Int
   gasilni_dom gasilni_dom @relation(fields: [id_gd], references: [id_gd])
 
+  // karton opreme
+  servisi   oprema_servis[]
+  dokumenti oprema_dokument[]
+  incidenti oprema_incident[]
+
   intervencija_oprema intervencija_oprema[]
 
+  @@index([id_gd])
+  @@index([id_v_dodeljeno])
   @@map("oprema")
 }
 
@@ -288,9 +359,100 @@ model intervencija_oprema {
   id_i Int
   intervencija intervencija @relation(fields: [id_i], references: [id_i], onDelete: Cascade)
 
-  kolicina Int
-  ure_uporabe Decimal @db.Decimal(6,2)
-  strosek Decimal @db.Decimal(12,2)
+  kolicina    Int     @default(1)
+  ure_uporabe Decimal @db.Decimal(6,2) @default(0)
 
+  unicen Boolean @default(false)
+  opomba  String? @db.VarChar(500)
+
+  // če stroškov kasneje ne želiš, ga odstraniš — za zdaj default 0 da ne crkujejo inserti
+  strosek Decimal @db.Decimal(12,2) @default(0)
+
+  @@index([id_o])
+  @@index([id_i])
   @@map("intervencija_oprema")
+}
+
+/* =========================
+   DIGITALNI KARTON OPREME
+========================= */
+
+model oprema_servis {
+  id_os Int @id @default(autoincrement())
+
+  id_o Int
+  oprema oprema @relation(fields: [id_o], references: [id_o], onDelete: Cascade)
+
+  datum DateTime @db.Date
+
+  id_ss Int
+  servis_status servis_status @relation(fields: [id_ss], references: [id_ss])
+
+  opis      String? @db.VarChar(400)
+  izvajalec String? @db.VarChar(200)
+  strosek   Decimal? @db.Decimal(12,2)
+
+  ure_ob_servisu Decimal? @db.Decimal(10,2)
+
+  ustvaril_id_u Int?
+  ustvaril uporabnik? @relation("OpremaServisUstvaril", fields: [ustvaril_id_u], references: [id_u])
+
+  @@index([id_o, datum])
+  @@map("oprema_servis")
+}
+
+model oprema_dokument {
+  id_od Int @id @default(autoincrement())
+
+  id_o Int
+  oprema oprema @relation(fields: [id_o], references: [id_o], onDelete: Cascade)
+
+  id_dt Int
+  dokument_tip dokument_tip @relation(fields: [id_dt], references: [id_dt])
+
+  naziv String @db.VarChar(200)
+
+  mime       String? @db.VarChar(100)
+  size_bytes Int?
+  datum      DateTime? @db.Date
+
+  storage_key String @db.VarChar(500)
+  public_url  String? @db.VarChar(800)
+
+  uploaded_at DateTime @default(now()) @db.Timestamp(6)
+
+  uploaded_by Int?
+  uploader uporabnik? @relation("OpremaDokumentUploader", fields: [uploaded_by], references: [id_u])
+
+  @@index([id_o, uploaded_at])
+  @@map("oprema_dokument")
+}
+
+model oprema_incident {
+  id_oi Int @id @default(autoincrement())
+
+  id_o Int
+  oprema oprema @relation(fields: [id_o], references: [id_o], onDelete: Cascade)
+
+  naslov String @db.VarChar(200)
+  opis   String? @db.VarChar(800)
+
+  datum DateTime @db.Date
+
+  id_is Int
+  incident_status incident_status @relation(fields: [id_is], references: [id_is])
+
+  prijavil_id_u Int?
+  prijavil uporabnik? @relation("OpremaIncidentPrijavil", fields: [prijavil_id_u], references: [id_u])
+
+  resitev       String? @db.VarChar(800)
+  zakljuceno_at DateTime? @db.Timestamp(6)
+
+  // opcijsko: povezava na intervencijo
+  id_i Int?
+  intervencija intervencija? @relation(fields: [id_i], references: [id_i], onDelete: SetNull)
+
+  @@index([id_o, datum])
+  @@index([id_i])
+  @@map("oprema_incident")
 }

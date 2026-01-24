@@ -1,6 +1,7 @@
 import PageHeader from "@/components/common/page-header";
 import { prisma } from "@/lib/prisma";
 import { getDevGdId } from "@/lib/gd";
+import Link from "next/link";
 
 export default async function EquipmentPage() {
   const gdId = getDevGdId();
@@ -43,16 +44,33 @@ export default async function EquipmentPage() {
             </thead>
             <tbody>
               {equipment.map((o) => (
-                <tr key={o.id_o} className="border-b last:border-b-0">
-                  <td className="py-3 pr-4 font-medium">{o.ime_opreme}</td>
-                  <td className="py-3 pr-4">{o.kategorija_oprema.ime_kategorije}</td>
+                <tr
+                  key={o.id_o}
+                  className="border-b last:border-b-0 hover:bg-gray-50"
+                >
+                  <td className="py-3 pr-4 font-medium">
+                    <Link
+                      href={`/equipment/${o.id_o}`}
+                      className="block"
+                    >
+                      {o.ime_opreme}
+                    </Link>
+                  </td>
+
+                  <td className="py-3 pr-4">
+                    {o.kategorija_oprema.ime_kategorije}
+                  </td>
+
                   <td className="py-3 pr-4">
                     <span className="inline-flex items-center rounded-full border px-2 py-1 text-xs">
                       {o.stanje_opreme.ime_stanja}
                     </span>
                   </td>
+
                   <td className="py-3 pr-4 text-muted-foreground">
-                    {o.ustvarjeno ? new Date(o.ustvarjeno).toLocaleDateString("sl-SI") : "—"}
+                    {o.ustvarjeno
+                      ? new Date(o.ustvarjeno).toLocaleDateString("sl-SI")
+                      : "—"}
                   </td>
                 </tr>
               ))}

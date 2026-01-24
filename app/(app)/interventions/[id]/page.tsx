@@ -3,13 +3,12 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import React from "react";
 
-type TabKey = "osnovno" | "prisotnost" | "oprema" | "vozila" | "stroski";
+type TabKey = "osnovno" | "prisotnost" | "oprema" | "stroski";
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "osnovno", label: "Osnovno" },
   { key: "prisotnost", label: "Prisotnost" },
   { key: "oprema", label: "Oprema" },
-  { key: "vozila", label: "Vozila" },
   { key: "stroski", label: "Stroški" },
 ];
 
@@ -80,9 +79,7 @@ export default async function InterventionDetailPage({
 
   if (!intervencija) notFound();
 
-  // -------------------------
-  // COUNTS + BASIC
-  // -------------------------
+
   const trajanje = Number(intervencija.trajanje_ur ?? 0); // ure
   const skupneUre = trajanje.toFixed(2);
 
@@ -90,9 +87,7 @@ export default async function InterventionDetailPage({
   const vozilaCount = intervencija.intervencije_vozila.length;
   const opremaCount = intervencija.intervencija_oprema.length;
 
-  // -------------------------
-  // NEDODELJENI (prisotnost)
-  // -------------------------
+ 
   const inVehicleUserIds = new Set(
     intervencija.intervencije_vozila.flatMap((iv) =>
       iv.intervencije_vozila_uporabniki.map((x) => x.id_u)
@@ -103,41 +98,29 @@ export default async function InterventionDetailPage({
     (x) => !inVehicleUserIds.has(x.id_u)
   );
 
-  // -------------------------
-  // STROŠKI (izračun)
-  // -------------------------
+ 
   const cenaTipaCasa = Number(intervencija.tip_casa?.cena_na_uro ?? 0);
 
-  // Moštvo
   const stroskiMostvo = claniCount * trajanje * cenaTipaCasa;
 
-  // Vozila (predpostavka: celo intervencijo)
   const vozilaRows = intervencija.intervencije_vozila.map((iv) => {
-    // IMPORTANT: prilagodi ime polja, če ni "cena_na_uro"
     const cenaVozila = Number((iv.vozilo as any).cena_na_uro ?? 0);
     const strosek = trajanje * cenaVozila;
     return { iv, cenaVozila, strosek };
   });
   const stroskiVozila = vozilaRows.reduce((s, r) => s + r.strosek, 0);
 
-  // Oprema (kolicina * ure * cena_na_uro)
   const opremaRows = intervencija.intervencija_oprema.map((io) => {
-    // IMPORTANT: prilagodi ime polja, če ni "cena_na_uro"
     const cenaOpreme = Number((io.oprema as any).cena_na_uro ?? 0);
     const ure = Number(io.ure_uporabe ?? 0);
     const kolicina = Number(io.kolicina ?? 0);
 
-    // Če želiš uporabljati STOREK iz baze, daj:
-    // const strosek = Number(io.strosek ?? 0);
-
-    // Če želiš kalkulacijo:
     const strosek = kolicina * ure * cenaOpreme;
 
     return { io, cenaOpreme, ure, kolicina, strosek };
   });
   const stroskiOprema = opremaRows.reduce((s, r) => s + r.strosek, 0);
 
-  // Skupaj
   const skupniStroski = stroskiMostvo + stroskiVozila + stroskiOprema;
 
   return (
@@ -168,7 +151,6 @@ export default async function InterventionDetailPage({
 
       <div className="grid gap-6 xl:grid-cols-4">
         <div className="xl:col-span-3 space-y-4">
-          {/* TAB BAR */}
           <div className="inline-flex rounded-xl border bg-white p-1">
             {TABS.map((t) => {
               const active = tab === t.key;
@@ -189,7 +171,6 @@ export default async function InterventionDetailPage({
             })}
           </div>
 
-          {/* OSNOVNO */}
           {tab === "osnovno" && (
             <SectionCard title="Osnovni podatki">
               <div className="grid gap-4 sm:grid-cols-2">
@@ -215,7 +196,6 @@ export default async function InterventionDetailPage({
             </SectionCard>
           )}
 
-          {/* PRISOTNOST */}
           {tab === "prisotnost" && (
             <div className="grid gap-6 xl:grid-cols-2">
               <SectionCard
@@ -291,7 +271,6 @@ export default async function InterventionDetailPage({
             </div>
           )}
 
-          {/* OPREMA */}
           {tab === "oprema" && (
             <SectionCard
               title={`Oprema (${opremaCount})`}
@@ -346,14 +325,7 @@ export default async function InterventionDetailPage({
             </SectionCard>
           )}
 
-          {/* VOZILA */}
-          {tab === "vozila" && (
-            <SectionCard title="Vozila">
-              <Empty text="Če boš vozila prikazoval že pod Prisotnost, lahko ta tab skriješ ali uporabiš za Phase 2." />
-            </SectionCard>
-          )}
 
-          {/* STROŠKI */}
           {tab === "stroski" && (
             <SectionCard title="Stroški" subtitle="Moštvo + vozila + oprema">
               <div className="overflow-x-auto">
@@ -421,7 +393,6 @@ export default async function InterventionDetailPage({
           )}
         </div>
 
-        {/* POVZETEK */}
         <div className="xl:col-span-1">
           <div className="rounded-xl border bg-white p-5">
             <div className="mb-4 text-sm font-semibold">Povzetek</div>
