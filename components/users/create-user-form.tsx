@@ -1,0 +1,151 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { ROLE_LABEL, ROLES } from "@/lib/roles";
+
+export default function CreateUserForm() {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState<string>(ROLES.CLAN);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const reset = () => {
+    setName("");
+    setEmail("");
+    setPassword("");
+    setRole(ROLES.CLAN);
+    setError(null);
+  };
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password, role }),
+      });
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || "Napaka");
+
+      reset();
+      setOpen(false);
+      router.refresh();
+    } catch (err: any) {
+      setError(err?.message ?? String(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        className="rounded-lg border px-3 py-2 text-sm bg-white"
+        aria-haspopup="dialog"
+      >
+        Dodaj
+      </button>
+
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/40 transition-opacity"
+            onClick={() => setOpen(false)}
+            aria-hidden
+          />
+
+          <div className="relative w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Dodaj novega uporabnika</h3>
+              <button
+                onClick={() => setOpen(false)}
+                aria-label="Zapri"
+                className="-mr-2 rounded p-1 text-muted-foreground hover:bg-muted"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={onSubmit} className="grid gap-3">
+              <label className="text-sm">Ime</label>
+              <input
+                className="rounded-lg border px-3 py-2 text-sm"
+                placeholder="Ime"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+
+              <label className="text-sm">Email</label>
+              <input
+                className="rounded-lg border px-3 py-2 text-sm"
+                placeholder="Email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+
+              <label className="text-sm">Geslo</label>
+              <input
+                className="rounded-lg border px-3 py-2 text-sm"
+                placeholder="Geslo"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+
+              <label className="text-sm">Vloga</label>
+              <select
+                className="rounded-lg border px-3 py-2 text-sm"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+              >
+                {Object.keys(ROLE_LABEL).map((k) => (
+                  <option key={k} value={k}>
+                    {(ROLE_LABEL as any)[k]}
+                  </option>
+                ))}
+              </select>
+
+              <div className="mt-4 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  className="rounded-lg border px-4 py-2 text-sm"
+                  onClick={() => {
+                    reset();
+                    setOpen(false);
+                  }}
+                >
+                  Prekliči
+                </button>
+
+                <button
+                  className="rounded-lg bg-primary px-4 py-2 text-sm text-white disabled:opacity-50"
+                  disabled={loading}
+                  type="submit"
+                >
+                  Ustvari
+                </button>
+              </div>
+
+              {error && <div className="mt-2 text-sm text-destructive">{error}</div>}
+            </form>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}

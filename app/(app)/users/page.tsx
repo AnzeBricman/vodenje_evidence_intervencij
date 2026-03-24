@@ -1,4 +1,5 @@
 import PageHeader from "@/components/common/page-header";
+import CreateUserForm from "@/components/users/create-user-form";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/auth-guards";
 
@@ -18,13 +19,18 @@ export default async function UsersPage() {
         subtitle="Člani tvojega gasilskega društva"
       />
 
+      
+
       <div className="rounded-xl border bg-white p-5">
-        <div className="mb-4 flex gap-3">
+        <div className="mb-4 flex items-center gap-3">
           <input
-            className="w-full rounded-lg border px-3 py-2 text-sm"
+            className="flex-1 rounded-lg border px-3 py-2 text-sm"
             placeholder="Iskanje po imenu ali emailu..."
           />
-          <button className="rounded-lg border px-3 py-2 text-sm">Vloga</button>
+          <div className="flex items-center gap-3">
+            <button className="rounded-lg border px-3 py-2 text-sm">Vloga</button>
+            <CreateUserForm />
+          </div>
         </div>
 
         <div className="overflow-x-auto">
