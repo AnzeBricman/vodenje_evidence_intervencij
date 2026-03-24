@@ -1,37 +1,60 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ROLE_LABEL, ROLES } from "@/lib/roles";
+import { useState } from "react";
 
-export default function CreateUserForm() {
+type Option = {
+  id: number;
+  label: string;
+};
+
+type CreateEquipmentFormProps = {
+  categories: Option[];
+  states: Option[];
+};
+
+export default function CreateEquipmentForm({
+  categories,
+  states,
+}: CreateEquipmentFormProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [role, setRole] = useState<string>(ROLES.CLAN);
+  const [serialNumber, setSerialNumber] = useState("");
+  const [hourlyRate, setHourlyRate] = useState("");
+  const [description, setDescription] = useState("");
+  const [categoryId, setCategoryId] = useState(categories[0]?.id?.toString() ?? "");
+  const [stateId, setStateId] = useState(states[0]?.id?.toString() ?? "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const reset = () => {
     setName("");
-    setEmail("");
-    setPassword("");
-    setRole(ROLES.CLAN);
+    setSerialNumber("");
+    setHourlyRate("");
+    setDescription("");
+    setCategoryId(categories[0]?.id?.toString() ?? "");
+    setStateId(states[0]?.id?.toString() ?? "");
     setError(null);
   };
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     setLoading(true);
+    setError(null);
 
     try {
-      const res = await fetch("/api/users", {
+      const res = await fetch("/api/equipment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, role }),
+        body: JSON.stringify({
+          name,
+          serialNumber,
+          hourlyRate,
+          description,
+          categoryId: Number(categoryId),
+          stateId: Number(stateId),
+        }),
       });
 
       const json = await res.json();
@@ -51,7 +74,7 @@ export default function CreateUserForm() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="rounded-lg border px-3 py-2 text-sm bg-white"
+        className="rounded-lg border bg-white px-3 py-2 text-sm"
         aria-haspopup="dialog"
       >
         Dodaj
@@ -67,58 +90,81 @@ export default function CreateUserForm() {
 
           <div className="relative w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Dodaj novega uporabnika</h3>
+              <h3 className="text-lg font-semibold">Dodaj novo opremo</h3>
               <button
                 onClick={() => setOpen(false)}
                 aria-label="Zapri"
                 className="-mr-2 rounded p-1 text-muted-foreground hover:bg-muted"
               >
-                ✕
+                ×
               </button>
             </div>
 
             <form onSubmit={onSubmit} className="grid gap-3">
-              <label className="text-sm">Ime in priimek</label>
+              <label className="text-sm">Naziv opreme</label>
               <input
                 className="rounded-lg border px-3 py-2 text-sm"
-                placeholder="Ime in priimek"
+                placeholder="Naziv opreme"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
               />
 
-              <label className="text-sm">Email</label>
+              <label className="text-sm">Serijska številka</label>
               <input
                 className="rounded-lg border px-3 py-2 text-sm"
-                placeholder="Email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Serijska številka"
+                value={serialNumber}
+                onChange={(e) => setSerialNumber(e.target.value)}
+              />
+
+              <label className="text-sm">Cena na uro</label>
+              <input
+                className="rounded-lg border px-3 py-2 text-sm"
+                placeholder="npr. 10.00"
+                type="number"
+                min="0"
+                step="0.01"
+                value={hourlyRate}
+                onChange={(e) => setHourlyRate(e.target.value)}
                 required
               />
 
-              <label className="text-sm">Geslo</label>
-              <input
-                className="rounded-lg border px-3 py-2 text-sm"
-                placeholder="Geslo"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-
-              <label className="text-sm">Vloga</label>
+              <label className="text-sm">Kategorija</label>
               <select
                 className="rounded-lg border px-3 py-2 text-sm"
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
+                value={categoryId}
+                onChange={(e) => setCategoryId(e.target.value)}
+                required
               >
-                {Object.keys(ROLE_LABEL).map((k) => (
-                  <option key={k} value={k}>
-                    {(ROLE_LABEL as any)[k]}
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.label}
                   </option>
                 ))}
               </select>
+
+              <label className="text-sm">Stanje</label>
+              <select
+                className="rounded-lg border px-3 py-2 text-sm"
+                value={stateId}
+                onChange={(e) => setStateId(e.target.value)}
+                required
+              >
+                {states.map((state) => (
+                  <option key={state.id} value={state.id}>
+                    {state.label}
+                  </option>
+                ))}
+              </select>
+
+              <label className="text-sm">Opis</label>
+              <textarea
+                className="min-h-24 rounded-lg border px-3 py-2 text-sm"
+                placeholder="Kratek opis opreme"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
 
               <div className="mt-4 flex items-center justify-end gap-2">
                 <button
@@ -141,7 +187,7 @@ export default function CreateUserForm() {
                 </button>
               </div>
 
-              {error && <div className="mt-2 text-sm text-destructive">{error}</div>}
+              {error ? <div className="mt-2 text-sm text-destructive">{error}</div> : null}
             </form>
           </div>
         </div>

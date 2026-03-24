@@ -14,10 +14,14 @@ export async function requireUser() {
 export async function requirePermission(permission: Permission) {
   const user = await requireUser();
 
-  const allowed = PERMISSIONS[permission];
-  if (!allowed.includes((user as any).role)) {
+  if (!hasPermission((user as any).role, permission)) {
     throw new Error("Nimaš pravic za to dejanje.");
   }
 
   return user;
+}
+
+export function hasPermission(role: string | undefined, permission: Permission) {
+  const allowed = PERMISSIONS[permission];
+  return allowed.includes(role as any);
 }

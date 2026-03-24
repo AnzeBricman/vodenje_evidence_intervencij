@@ -1,37 +1,60 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ROLE_LABEL, ROLES } from "@/lib/roles";
+import { useState } from "react";
 
-export default function CreateUserForm() {
+type Option = {
+  id: number;
+  label: string;
+};
+
+type CreateVehicleFormProps = {
+  vehicleTypes: Option[];
+  vehicleStatuses: Option[];
+};
+
+export default function CreateVehicleForm({
+  vehicleTypes,
+  vehicleStatuses,
+}: CreateVehicleFormProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [role, setRole] = useState<string>(ROLES.CLAN);
+  const [registration, setRegistration] = useState("");
+  const [hourlyRate, setHourlyRate] = useState("");
+  const [description, setDescription] = useState("");
+  const [typeId, setTypeId] = useState(vehicleTypes[0]?.id?.toString() ?? "");
+  const [statusId, setStatusId] = useState(vehicleStatuses[0]?.id?.toString() ?? "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const reset = () => {
     setName("");
-    setEmail("");
-    setPassword("");
-    setRole(ROLES.CLAN);
+    setRegistration("");
+    setHourlyRate("");
+    setDescription("");
+    setTypeId(vehicleTypes[0]?.id?.toString() ?? "");
+    setStatusId(vehicleStatuses[0]?.id?.toString() ?? "");
     setError(null);
   };
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     setLoading(true);
+    setError(null);
 
     try {
-      const res = await fetch("/api/users", {
+      const res = await fetch("/api/vehicles", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, role }),
+        body: JSON.stringify({
+          name,
+          registration,
+          hourlyRate,
+          description,
+          typeId: Number(typeId),
+          statusId: Number(statusId),
+        }),
       });
 
       const json = await res.json();
@@ -51,7 +74,7 @@ export default function CreateUserForm() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="rounded-lg border px-3 py-2 text-sm bg-white"
+        className="rounded-lg border bg-white px-3 py-2 text-sm"
         aria-haspopup="dialog"
       >
         Dodaj
@@ -67,58 +90,81 @@ export default function CreateUserForm() {
 
           <div className="relative w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Dodaj novega uporabnika</h3>
+              <h3 className="text-lg font-semibold">Dodaj novo vozilo</h3>
               <button
                 onClick={() => setOpen(false)}
                 aria-label="Zapri"
                 className="-mr-2 rounded p-1 text-muted-foreground hover:bg-muted"
               >
-                ✕
+                ×
               </button>
             </div>
 
             <form onSubmit={onSubmit} className="grid gap-3">
-              <label className="text-sm">Ime in priimek</label>
+              <label className="text-sm">Ime vozila</label>
               <input
                 className="rounded-lg border px-3 py-2 text-sm"
-                placeholder="Ime in priimek"
+                placeholder="Ime vozila"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
               />
 
-              <label className="text-sm">Email</label>
+              <label className="text-sm">Registrska</label>
               <input
                 className="rounded-lg border px-3 py-2 text-sm"
-                placeholder="Email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Registrska oznaka"
+                value={registration}
+                onChange={(e) => setRegistration(e.target.value)}
+              />
+
+              <label className="text-sm">Cena na uro</label>
+              <input
+                className="rounded-lg border px-3 py-2 text-sm"
+                placeholder="npr. 25.00"
+                type="number"
+                min="0"
+                step="0.01"
+                value={hourlyRate}
+                onChange={(e) => setHourlyRate(e.target.value)}
                 required
               />
 
-              <label className="text-sm">Geslo</label>
-              <input
-                className="rounded-lg border px-3 py-2 text-sm"
-                placeholder="Geslo"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-
-              <label className="text-sm">Vloga</label>
+              <label className="text-sm">Tip</label>
               <select
                 className="rounded-lg border px-3 py-2 text-sm"
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
+                value={typeId}
+                onChange={(e) => setTypeId(e.target.value)}
+                required
               >
-                {Object.keys(ROLE_LABEL).map((k) => (
-                  <option key={k} value={k}>
-                    {(ROLE_LABEL as any)[k]}
+                {vehicleTypes.map((type) => (
+                  <option key={type.id} value={type.id}>
+                    {type.label}
                   </option>
                 ))}
               </select>
+
+              <label className="text-sm">Status</label>
+              <select
+                className="rounded-lg border px-3 py-2 text-sm"
+                value={statusId}
+                onChange={(e) => setStatusId(e.target.value)}
+                required
+              >
+                {vehicleStatuses.map((status) => (
+                  <option key={status.id} value={status.id}>
+                    {status.label}
+                  </option>
+                ))}
+              </select>
+
+              <label className="text-sm">Opis</label>
+              <textarea
+                className="min-h-24 rounded-lg border px-3 py-2 text-sm"
+                placeholder="Kratek opis vozila"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
 
               <div className="mt-4 flex items-center justify-end gap-2">
                 <button
@@ -141,7 +187,7 @@ export default function CreateUserForm() {
                 </button>
               </div>
 
-              {error && <div className="mt-2 text-sm text-destructive">{error}</div>}
+              {error ? <div className="mt-2 text-sm text-destructive">{error}</div> : null}
             </form>
           </div>
         </div>

@@ -1,91 +1,66 @@
 import PageHeader from "@/components/common/page-header";
+import CreateEquipmentForm from "@/components/equipment/create-equipment-form";
+import EquipmentTable from "@/components/equipment/equipment-table";
+import { hasPermission, requireUser } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
-import { getDevGdId } from "@/lib/gd";
-import Link from "next/link";
 
 export default async function EquipmentPage() {
-  const gdId = getDevGdId();
+  const user = await requireUser();
 
-  const equipment = await prisma.oprema.findMany({
-    where: { id_gd: gdId },
-    include: {
-      kategorija_oprema: true,
-      stanje_opreme: true,
-    },
-    orderBy: { ime_opreme: "asc" },
-  });
+  const [equipment, categories, states] = await Promise.all([
+    prisma.oprema.findMany({
+      where: { id_gd: user.id_gd },
+      include: {
+        kategorija_oprema: true,
+        stanje_opreme: true,
+      },
+      orderBy: { ime_opreme: "asc" },
+    }),
+    prisma.kategorija_oprema.findMany({ orderBy: { ime_kategorije: "asc" } }),
+    prisma.stanje_opreme.findMany({ orderBy: { ime_stanja: "asc" } }),
+  ]);
+
+  const serializedEquipment = equipment.map((item) => ({
+    id_o: item.id_o,
+    ime_opreme: item.ime_opreme,
+    kategorija: item.kategorija_oprema.ime_kategorije,
+    stanje: item.stanje_opreme.ime_stanja,
+    stanjeId: item.id_so,
+    ustvarjeno: item.ustvarjeno ? item.ustvarjeno.toISOString() : null,
+    serijska_st: item.serijska_st,
+  }));
+
+  const canManageEquipment = hasPermission((user as any).role, "EQUIPMENT_MANAGE");
 
   return (
     <>
       <PageHeader
         title="Oprema"
         subtitle="Seznam opreme tvojega gasilskega društva"
+        right={
+          canManageEquipment ? (
+            <CreateEquipmentForm
+              categories={categories.map((category) => ({
+                id: category.id_ko,
+                label: category.ime_kategorije,
+              }))}
+              states={states.map((state) => ({
+                id: state.id_so,
+                label: state.ime_stanja,
+              }))}
+            />
+          ) : null
+        }
       />
 
-      <div className="rounded-xl border bg-white p-5">
-        <div className="mb-4 flex gap-3">
-          <input
-            className="w-full rounded-lg border px-3 py-2 text-sm"
-            placeholder="Iskanje po nazivu opreme..."
-          />
-          <button className="rounded-lg border px-3 py-2 text-sm">Kategorija</button>
-          <button className="rounded-lg border px-3 py-2 text-sm">Stanje</button>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b text-left text-xs text-muted-foreground">
-                <th className="py-2 pr-4">Naziv</th>
-                <th className="py-2 pr-4">Kategorija</th>
-                <th className="py-2 pr-4">Stanje</th>
-                <th className="py-2 pr-4">Ustvarjeno</th>
-              </tr>
-            </thead>
-            <tbody>
-              {equipment.map((o) => (
-                <tr
-                  key={o.id_o}
-                  className="border-b last:border-b-0 hover:bg-gray-50"
-                >
-                  <td className="py-3 pr-4 font-medium">
-                    <Link
-                      href={`/equipment/${o.id_o}`}
-                      className="block"
-                    >
-                      {o.ime_opreme}
-                    </Link>
-                  </td>
-
-                  <td className="py-3 pr-4">
-                    {o.kategorija_oprema.ime_kategorije}
-                  </td>
-
-                  <td className="py-3 pr-4">
-                    <span className="inline-flex items-center rounded-full border px-2 py-1 text-xs">
-                      {o.stanje_opreme.ime_stanja}
-                    </span>
-                  </td>
-
-                  <td className="py-3 pr-4 text-muted-foreground">
-                    {o.ustvarjeno
-                      ? new Date(o.ustvarjeno).toLocaleDateString("sl-SI")
-                      : "—"}
-                  </td>
-                </tr>
-              ))}
-
-              {equipment.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="py-10 text-center text-muted-foreground">
-                    Ni opreme v bazi za to društvo.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <EquipmentTable
+        equipment={serializedEquipment}
+        canManageEquipment={canManageEquipment}
+        states={states.map((state) => ({
+          id: state.id_so,
+          label: state.ime_stanja,
+        }))}
+      />
     </>
   );
 }

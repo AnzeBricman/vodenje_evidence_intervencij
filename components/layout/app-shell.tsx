@@ -1,5 +1,4 @@
 import Sidebar from "./sidebar";
-import Topbar from "./topbar";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
@@ -10,10 +9,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </aside>
 
         <div className="flex-1">
-          <header className="h-16 border-b bg-white">
-            <Topbar />
-          </header>
-
           <main className="p-6">{children}</main>
         </div>
       </div>
