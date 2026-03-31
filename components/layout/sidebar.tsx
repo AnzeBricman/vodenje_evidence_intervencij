@@ -49,18 +49,21 @@ export default function Sidebar() {
     (userRole ?? "").toUpperCase() === "POVELJNIK";
 
   return (
-    <div className="flex h-screen flex-col">
-      <div className="p-6">
-        <div className="flex items-center gap-2">
-          <div className="h-10 w-10 rounded-lg bg-red-600" />
+    <div className="flex h-screen flex-col bg-white">
+      <div className="border-b border-red-100/70 px-6 pb-5 pt-6">
+        <div className="flex items-center">
           <div>
-            <div className="text-sm font-semibold">Gasilstvo</div>
-            <div className="text-xs text-muted-foreground">Intervencije</div>
+            <div className="text-[15px] font-semibold tracking-tight text-slate-900">
+              Gasilstvo
+            </div>
+            <div className="mt-0.5 text-[11px] font-medium uppercase tracking-[0.22em] text-slate-500">
+              Intervencije
+            </div>
           </div>
         </div>
       </div>
 
-      <nav className="px-3 space-y-1">
+      <nav className="space-y-1 px-4 py-4">
         {nav
           .filter((item) => {
             // če želiš bolj napreden sistem, to kasneje priklopiš na roles.ts
@@ -76,40 +79,57 @@ export default function Sidebar() {
                 key={item.href}
                 href={item.href}
                 className={[
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition",
+                  "group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-[15px] font-medium transition-all",
                   active
-                    ? "bg-red-600 text-white"
-                    : "text-gray-700 hover:bg-gray-100",
+                    ? "bg-gradient-to-r from-red-100 via-red-50 to-rose-50 text-red-700 shadow-[0_14px_26px_-22px_rgba(220,38,38,0.45)]"
+                    : "text-slate-700 hover:bg-red-50 hover:text-red-700",
                 ].join(" ")}
               >
-                <Icon className="h-4 w-4" />
+                <span
+                  className={[
+                    "flex h-8 w-8 items-center justify-center rounded-xl transition",
+                    active
+                      ? "bg-white text-red-600 shadow-sm"
+                      : "bg-slate-100 text-slate-500 group-hover:bg-white group-hover:text-red-600",
+                  ].join(" ")}
+                >
+                  <Icon className="h-4 w-4" />
+                </span>
                 {item.label}
               </Link>
             );
           })}
       </nav>
 
-      <div className="mt-auto p-4 border-t">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center text-sm font-semibold text-red-700">
+      <div className="mt-auto border-t border-slate-200/80 bg-gradient-to-t from-slate-50 to-white p-4">
+        <Link
+          href="/profile"
+          className={[
+            "flex items-center gap-3 rounded-3xl border px-3 py-2.5 transition-all",
+            pathname.startsWith("/profile")
+              ? "border-red-100 bg-red-50 shadow-[0_18px_40px_-28px_rgba(220,38,38,0.55)]"
+              : "border-transparent bg-white/80 hover:border-slate-200 hover:bg-white hover:shadow-[0_18px_40px_-34px_rgba(15,23,42,0.3)]",
+          ].join(" ")}
+        >
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-red-100 to-red-200 text-xs font-semibold text-red-700">
             {initials(userName)}
           </div>
 
-          <div className="leading-tight min-w-0">
-            <div className="text-sm font-medium truncate">
+          <div className="min-w-0 leading-tight">
+            <div className="truncate text-sm font-semibold text-slate-900">
               {status === "loading" ? "Nalagam..." : userName}
             </div>
-            <div className="text-xs text-muted-foreground">
+            <div className="mt-0.5 text-xs text-slate-500">
               {roleLabel(userRole)}
             </div>
           </div>
-        </div>
-      <button
-        className="mt-4 text-sm text-gray-600 hover:text-gray-900"
-        onClick={() => signOut({ callbackUrl: "/" })}
-      >
-        Odjava
-      </button>
+        </Link>
+        <button
+          className="mt-3 px-2 text-sm font-medium text-slate-500 transition hover:text-slate-900"
+          onClick={() => signOut({ callbackUrl: "/" })}
+        >
+          Odjava
+        </button>
       </div>
     </div>
   );

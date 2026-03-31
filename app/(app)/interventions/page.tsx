@@ -1,42 +1,49 @@
-import PageHeader from "@/components/common/page-header";
-import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-
-function formatDateTime(d: Date | null) {
-  if (!d) return "—";
-  return new Intl.DateTimeFormat("sl-SI", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(d);
-}
-
-function formatHours(h: unknown) {
-  if (h == null) return "—";
-  const n = Number((h as any)?.toString?.() ?? h);
-  if (Number.isNaN(n)) return "—";
-  return `${n.toFixed(2)} h`;
-}
+import PageHeader from "@/components/common/page-header";
+import InterventionsTable from "@/components/interventions/interventions-table";
+import { hasPermission, requireUser } from "@/lib/auth-guards";
+import { prisma } from "@/lib/prisma";
 
 export default async function InterventionsPage() {
-  const interventions = await prisma.intervencija.findMany({
-    orderBy: { zacetek: "desc" },
-    take: 50,
-    select: {
-      id_i: true,
-      zap_st: true,
-      naslov: true,
-      lokacija: true,
-      zacetek: true,
-      trajanje_ur: true,
-      intervencija_tip: { select: { tip: true } },
-      status: { select: { ime_statusa: true } },
-    },
-  });
+  const user = await requireUser();
 
-  type InterventionRow = (typeof interventions)[number];
+  const [interventions, statuses] = await Promise.all([
+    prisma.intervencija.findMany({
+      where: { id_gd: user.id_gd },
+      orderBy: { zacetek: "desc" },
+      take: 50,
+      select: {
+        id_i: true,
+        zap_st: true,
+        naslov: true,
+        lokacija: true,
+        zacetek: true,
+        trajanje_ur: true,
+        id_s: true,
+        intervencija_tip: { select: { tip: true } },
+        status: { select: { ime_statusa: true } },
+      },
+    }),
+    prisma.status.findMany({
+      orderBy: { ime_statusa: "asc" },
+      select: { id_s: true, ime_statusa: true },
+    }),
+  ]);
+
+  const canCreate = hasPermission((user as any).role, "INTERVENTION_CREATE");
+  const canManageStatus = hasPermission((user as any).role, "INTERVENTION_EDIT");
+
+  const serializedInterventions = interventions.map((item) => ({
+    id_i: item.id_i,
+    zap_st: item.zap_st,
+    naslov: item.naslov,
+    lokacija: item.lokacija,
+    zacetek: item.zacetek ? item.zacetek.toISOString() : null,
+    trajanje_ur: item.trajanje_ur != null ? Number(item.trajanje_ur) : null,
+    vrsta: item.intervencija_tip?.tip ?? null,
+    status: item.status?.ime_statusa ?? null,
+    statusId: item.id_s,
+  }));
 
   return (
     <>
@@ -44,93 +51,19 @@ export default async function InterventionsPage() {
         title="Seznam intervencij"
         subtitle="Pregled vseh gasilskih intervencij"
         right={
-          <button className="rounded-lg bg-red-600 px-4 py-2 text-sm text-white">
-            + Nova intervencija
-          </button>
+          canCreate ? (
+            <Link href="/interventions/new" className="rounded-lg bg-red-600 px-4 py-2 text-sm text-white">
+              + Nova intervencija
+            </Link>
+          ) : null
         }
       />
 
-      <div className="rounded-xl border bg-white p-5">
-        <div className="mb-4 flex gap-3">
-          <input
-            className="w-full rounded-lg border px-3 py-2 text-sm"
-            placeholder="Iskanje po naslovu, številki ali lokaciji..."
-          />
-          <button className="rounded-lg border px-3 py-2 text-sm">
-            Vsi statusi
-          </button>
-          <button className="rounded-lg border px-3 py-2 text-sm">📅</button>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b text-left text-xs text-muted-foreground">
-                <th className="py-2 pr-4">Št.</th>
-                <th className="py-2 pr-4">Naslov</th>
-                <th className="py-2 pr-4">Lokacija</th>
-                <th className="py-2 pr-4">Vrsta</th>
-                <th className="py-2 pr-4">Začetek</th>
-                <th className="py-2 pr-4">Trajanje</th>
-                <th className="py-2 pr-4">Status</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {interventions.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="py-10 text-center text-muted-foreground"
-                  >
-                    Ni intervencij v bazi.
-                  </td>
-                </tr>
-              ) : (
-              interventions.map((i: InterventionRow) => (
-                <tr key={i.id_i} className="border-b last:border-b-0 hover:bg-gray-50">
-                  <td className="py-3 pr-4 font-medium">
-                    <Link
-                      href={`/interventions/${i.id_i}`}
-                      className="hover:underline text-blue-600"
-                    >
-                      {i.zap_st}
-                    </Link>
-                  </td>
-
-                  <td className="py-3 pr-4 font-medium">
-                    {i.naslov}
-                  </td>
-
-                  <td className="py-3 pr-4 text-muted-foreground">
-                    {i.lokacija ?? "—"}
-                  </td>
-
-                  <td className="py-3 pr-4">
-                    {i.intervencija_tip?.tip ?? "—"}
-                  </td>
-
-                  <td className="py-3 pr-4">
-                    {formatDateTime(i.zacetek)}
-                  </td>
-
-                  <td className="py-3 pr-4">
-                    {formatHours(i.trajanje_ur)}
-                  </td>
-
-    <td className="py-3 pr-4">
-      <span className="inline-flex items-center rounded-full border px-2 py-1 text-xs">
-        {i.status?.ime_statusa ?? "—"}
-      </span>
-    </td>
-  </tr>
-))
-
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <InterventionsTable
+        interventions={serializedInterventions}
+        statuses={statuses.map((status) => ({ id: status.id_s, label: status.ime_statusa }))}
+        canManageStatus={canManageStatus}
+      />
     </>
   );
 }
