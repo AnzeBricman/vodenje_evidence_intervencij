@@ -1,7 +1,9 @@
+import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/auth";
+import { sendCredentialsEmail } from "@/lib/mailer";
 import { prisma } from "@/lib/prisma";
 import { ROLE_LABEL, ROLES } from "@/lib/roles";
 
@@ -21,11 +23,10 @@ export async function POST(req: Request) {
     const body = await req.json();
     const email = String(body.email ?? "").trim().toLowerCase();
     const ime = String(body.name ?? "").trim();
-    const password = String(body.password ?? "");
     const role = String(body.role ?? ROLES.ADMIN);
     const id_gd = Number(body.id_gd);
 
-    if (!email || !ime || !password || !Number.isInteger(id_gd) || id_gd <= 0) {
+    if (!email || !ime || !Number.isInteger(id_gd) || id_gd <= 0) {
       return NextResponse.json({ error: "Manjkajoči ali neveljavni podatki." }, { status: 400 });
     }
 
@@ -47,7 +48,7 @@ export async function POST(req: Request) {
 
     const society = await prisma.gasilni_dom.findUnique({
       where: { id_gd },
-      select: { id_gd: true },
+      select: { id_gd: true, ime: true },
     });
 
     if (!society) {
@@ -66,7 +67,8 @@ export async function POST(req: Request) {
       });
     }
 
-    const hashed = await bcrypt.hash(password, 10);
+    const generatedPassword = crypto.randomBytes(9).toString("base64url");
+    const hashed = await bcrypt.hash(generatedPassword, 10);
 
     const created = await prisma.uporabnik.create({
       data: {
@@ -83,6 +85,29 @@ export async function POST(req: Request) {
         email: true,
       },
     });
+
+    try {
+      await sendCredentialsEmail({
+        to: email,
+        fullName: ime,
+        societyName: society.ime,
+        roleLabel,
+        password: generatedPassword,
+      });
+    } catch (mailError: any) {
+      await prisma.uporabnik.delete({
+        where: { id_u: created.id_u },
+      });
+
+      return NextResponse.json(
+        {
+          error:
+            mailError?.message ??
+            "Uporabnik ni bil ustvarjen, ker pošiljanje emaila ni uspelo.",
+        },
+        { status: 500 },
+      );
+    }
 
     return NextResponse.json({ ok: true, user: created });
   } catch (err: any) {

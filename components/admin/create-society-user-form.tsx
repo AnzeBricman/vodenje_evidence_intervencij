@@ -17,7 +17,6 @@ export default function CreateSocietyUserForm({
   const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [role, setRole] = useState<string>(ROLES.ADMIN);
   const [societyId, setSocietyId] = useState<string>(societies[0]?.id ? String(societies[0].id) : "");
   const [loading, setLoading] = useState(false);
@@ -39,7 +38,6 @@ export default function CreateSocietyUserForm({
         body: JSON.stringify({
           name,
           email,
-          password,
           role,
           id_gd: Number(societyId),
         }),
@@ -50,9 +48,8 @@ export default function CreateSocietyUserForm({
 
       setName("");
       setEmail("");
-      setPassword("");
       setRole(ROLES.ADMIN);
-      setSuccess(`Uporabnik ${json.user.ime} je bil dodan.`);
+      setSuccess(`Uporabnik ${json.user.ime} je bil dodan in email je bil poslan.`);
       router.refresh();
     } catch (err: any) {
       setError(err?.message ?? "Dodajanje ni uspelo.");
@@ -103,17 +100,6 @@ export default function CreateSocietyUserForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="grid gap-2">
-          <label className="text-sm font-medium text-slate-700">Začasno geslo</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100"
-            minLength={6}
-            required
-          />
-        </div>
-        <div className="grid gap-2">
           <label className="text-sm font-medium text-slate-700">Vloga</label>
           <select
             value={role}
@@ -126,6 +112,9 @@ export default function CreateSocietyUserForm({
               </option>
             ))}
           </select>
+        </div>
+        <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50/80 px-4 py-3 text-sm text-slate-600">
+          Sistem bo ustvaril naključno začasno geslo in ga poslal na vpisani email.
         </div>
       </div>
 
