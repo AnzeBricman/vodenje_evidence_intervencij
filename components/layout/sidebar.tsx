@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, ClipboardList, Wrench, Truck, Users } from "lucide-react";
+import { Home, ClipboardList, Wrench, Truck, Users, Shield } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 
 const nav = [
@@ -10,8 +10,10 @@ const nav = [
   { href: "/interventions", label: "Intervencije", icon: ClipboardList },
   { href: "/equipment", label: "Oprema", icon: Wrench },
   { href: "/vehicles", label: "Vozila", icon: Truck },
-  { href: "/users", label: "Uporabniki", icon: Users, minRole: "ADMIN" }, // primer: samo admin
+  { href: "/users", label: "Uporabniki", icon: Users },
 ] as const;
+
+const superAdminNav = [{ href: "/admin", label: "Sistemski panel", icon: Shield }] as const;
 
 function initials(name?: string | null) {
   const n = (name ?? "").trim();
@@ -23,8 +25,9 @@ function initials(name?: string | null) {
 }
 
 function roleLabel(role?: string | null) {
-  // prilagodi, če imaš druga imena rol
   switch ((role ?? "").toUpperCase()) {
+    case "SUPER_ADMIN":
+      return "Super admin";
     case "ADMIN":
       return "Administrator";
     case "POVELJNIK":
@@ -42,9 +45,13 @@ export default function Sidebar() {
 
   const userName = session?.user?.name ?? session?.user?.email ?? "Uporabnik";
   const userRole = (session?.user as any)?.role as string | undefined;
+  const isSuperAdmin = (userRole ?? "").toUpperCase() === "SUPER_ADMIN";
+  const societyName = isSuperAdmin
+    ? "Sistemski nivo"
+    : session?.user?.gd_name?.trim() || "Gasilstvo";
 
-  // primer: role check za link
   const canSeeUsers =
+    isSuperAdmin ||
     (userRole ?? "").toUpperCase() === "ADMIN" ||
     (userRole ?? "").toUpperCase() === "POVELJNIK";
 
@@ -54,7 +61,7 @@ export default function Sidebar() {
         <div className="flex items-center">
           <div>
             <div className="text-[15px] font-semibold tracking-tight text-slate-900">
-              Gasilstvo
+              {status === "loading" ? "Nalagam..." : societyName}
             </div>
             <div className="mt-0.5 text-[11px] font-medium uppercase tracking-[0.22em] text-slate-500">
               Intervencije
@@ -64,9 +71,8 @@ export default function Sidebar() {
       </div>
 
       <nav className="space-y-1 px-4 py-4">
-        {nav
+        {(isSuperAdmin ? superAdminNav : nav)
           .filter((item) => {
-            // če želiš bolj napreden sistem, to kasneje priklopiš na roles.ts
             if (item.href === "/users") return canSeeUsers;
             return true;
           })
@@ -119,9 +125,7 @@ export default function Sidebar() {
             <div className="truncate text-sm font-semibold text-slate-900">
               {status === "loading" ? "Nalagam..." : userName}
             </div>
-            <div className="mt-0.5 text-xs text-slate-500">
-              {roleLabel(userRole)}
-            </div>
+            <div className="mt-0.5 text-xs text-slate-500">{roleLabel(userRole)}</div>
           </div>
         </Link>
         <button

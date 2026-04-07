@@ -47,7 +47,7 @@ export default function LoginPage() {
                 email,
                 password,
                 redirect: true,
-                callbackUrl: "/dashboard",
+                callbackUrl: "/post-login",
               });
               if (res?.error) setErr("Napačen email ali geslo.");
             }}

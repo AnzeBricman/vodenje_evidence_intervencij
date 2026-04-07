@@ -1,7 +1,15 @@
 import PageHeader from "@/components/common/page-header";
+import { requireUser } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
+import { redirect } from "next/navigation";
 
 export default async function DashboardPage() {
+  const user = await requireUser();
+
+  if ((user as any).role === "SUPER_ADMIN") {
+    redirect("/admin");
+  }
+
   const activeStatusName = "Aktivna";
   const closedStatusName = "Zaključena";
 

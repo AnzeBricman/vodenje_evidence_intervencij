@@ -9,7 +9,7 @@ export default function HomePage() {
 
   const handleLoginClick = () => {
     if (status === "authenticated") {
-      router.push("/dashboard");
+      router.push("/post-login");
     } else {
       router.push("/login");
     }

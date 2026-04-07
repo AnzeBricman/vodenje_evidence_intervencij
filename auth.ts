@@ -5,6 +5,9 @@ import { prisma } from "@/lib/prisma";
 import type { Role } from "@/lib/roles";
 
 const roleMap: Record<string, Role> = {
+  SuperAdmin: "SUPER_ADMIN",
+  "Super Admin": "SUPER_ADMIN",
+  Super_Admin: "SUPER_ADMIN",
   Administrator: "ADMIN",
   Poveljnik: "POVELJNIK",
   Gasilec: "CLAN",
@@ -33,7 +36,10 @@ export const authOptions: NextAuthOptions = {
 
         const user = await prisma.uporabnik.findUnique({
           where: { email },
-          include: { vloga_v_aplikaciji: true },
+          include: {
+            vloga_v_aplikaciji: true,
+            gasilni_dom: true,
+          },
         });
 
         if (!user?.geslo) return null;
@@ -50,6 +56,7 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           role,
           id_gd: user.id_gd,
+          gd_name: user.gasilni_dom?.ime ?? null,
         } as any;
       },
     }),
@@ -61,11 +68,21 @@ export const authOptions: NextAuthOptions = {
         token.id = (user as any).id;
         token.role = (user as any).role;
         token.id_gd = (user as any).id_gd;
+        token.gd_name = (user as any).gd_name;
       }
 
       if (trigger === "update") {
         if (session?.email) token.email = session.email;
         if (session?.name) token.name = session.name;
+      }
+
+      if (!token.gd_name && token.id_gd) {
+        const gasilniDom = await prisma.gasilni_dom.findUnique({
+          where: { id_gd: Number(token.id_gd) },
+          select: { ime: true },
+        });
+
+        token.gd_name = gasilniDom?.ime ?? null;
       }
 
       return token;
@@ -76,6 +93,7 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).id = token.id as any;
         (session.user as any).role = token.role as any;
         (session.user as any).id_gd = token.id_gd as any;
+        (session.user as any).gd_name = token.gd_name as any;
       }
       return session;
     },
