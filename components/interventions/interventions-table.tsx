@@ -4,6 +4,7 @@ import { Search } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { formatDurationHours } from "@/lib/format-duration";
 
 type InterventionRow = {
   id_i: number;
@@ -37,11 +38,6 @@ function formatDateTime(value: string | null) {
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date(value));
-}
-
-function formatHours(value: number | null) {
-  if (value == null || Number.isNaN(value)) return "—";
-  return `${value.toFixed(2)} h`;
 }
 
 export default function InterventionsTable({
@@ -134,7 +130,9 @@ export default function InterventionsTable({
                 <td className="px-4 py-4 text-gray-500">{item.lokacija ?? "—"}</td>
                 <td className="px-4 py-4">{item.vrsta ?? "—"}</td>
                 <td className="px-4 py-4 text-gray-500">{formatDateTime(item.zacetek)}</td>
-                <td className="px-4 py-4 text-gray-500">{formatHours(item.trajanje_ur)}</td>
+                <td className="px-4 py-4 text-gray-500">
+                  {formatDurationHours(item.trajanje_ur)}
+                </td>
                 <td className="rounded-r-xl px-4 py-4">
                   {canManageStatus ? (
                     <select

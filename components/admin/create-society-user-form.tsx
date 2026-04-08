@@ -23,7 +23,7 @@ export default function CreateSocietyUserForm({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const roleOptions = [ROLES.ADMIN, ROLES.POVELJNIK, ROLES.CLAN, ROLES.UPORABNIK];
+  const roleOptions = [ROLES.ADMIN, ROLES.UPORABNIK];
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

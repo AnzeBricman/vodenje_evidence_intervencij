@@ -1,167 +1,77 @@
-"use client";
+import Link from "next/link";
 
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+const features = [
+  {
+    title: "Evidenca intervencij",
+    text: "Celoten pregled vseh gasilskih intervencij s podrobnostmi.",
+  },
+  {
+    title: "Upravljanje opreme",
+    text: "Šifrant gasilske opreme in spremljanje vzdrževanja.",
+  },
+  {
+    title: "Evidenca vozil",
+    text: "Pregled gasilskih vozil, kilometrov in servisov.",
+  },
+  {
+    title: "Statistika in stroški",
+    text: "Analiza ur, stroškov in ključnih kazalnikov.",
+  },
+];
 
 export default function HomePage() {
-  const { status } = useSession();
-  const router = useRouter();
-
-  const handleLoginClick = () => {
-    if (status === "authenticated") {
-      router.push("/post-login");
-    } else {
-      router.push("/login");
-    }
-  };
-
   return (
-    <>
-      <main className="wrapper">
-        <section className="hero">
-          <div className="card">
-            <h1>
+    <main className="min-h-screen bg-[#fafafa] px-5 py-16">
+      <div className="mx-auto flex w-full max-w-6xl flex-col items-center">
+        <section className="w-full max-w-4xl">
+          <div className="rounded-[28px] border border-slate-200 bg-white px-8 py-12 text-center shadow-[0_24px_50px_-34px_rgba(15,23,42,0.28)] sm:px-12">
+            <div className="inline-flex rounded-full border border-red-100 bg-red-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-red-600">
+              Evidenca intervencij
+            </div>
+
+            <h1 className="mt-6 text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl">
               Vodenje evidenc gasilskih
               <br />
               intervencij
             </h1>
 
-            <p className="subtitle">
-              Sodobna spletna aplikacija za pregledno vodenje intervencij,
-              opreme, vozil in sodelujočih članov gasilskih društev.
+            <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
+              Sodobna spletna aplikacija za pregledno vodenje intervencij, opreme,
+              vozil in sodelujočih članov gasilskih društev.
             </p>
 
-            <button className="cta" onClick={handleLoginClick}>
-              Prijava v sistem
-            </button>
+            <div className="mt-8">
+              <Link
+                href="/post-login"
+                className="inline-flex items-center justify-center rounded-2xl bg-red-600 px-6 py-3 text-sm font-medium text-white transition hover:bg-red-700"
+              >
+                Prijava v sistem
+              </Link>
+            </div>
 
-            <p className="hint">
+            <p className="mt-4 text-sm text-slate-500">
               Za pooblaščene člane gasilskih društev
             </p>
           </div>
         </section>
 
-        <section className="features">
-          <div className="feature">
-            <h3>Evidenca intervencij</h3>
-            <p>Celoten pregled vseh gasilskih intervencij s podrobnostmi.</p>
-          </div>
-
-          <div className="feature">
-            <h3>Upravljanje opreme</h3>
-            <p>Šifrant gasilske opreme in spremljanje vzdrževanja.</p>
-          </div>
-
-          <div className="feature">
-            <h3>Evidenca vozil</h3>
-            <p>Pregled gasilskih vozil, kilometrov in servisov.</p>
-          </div>
-
-          <div className="feature">
-            <h3>Statistika in stroški</h3>
-            <p>Analiza ur, stroškov in ključnih kazalnikov.</p>
-          </div>
+        <section className="mt-10 grid w-full max-w-5xl gap-6 md:grid-cols-2 xl:grid-cols-4">
+          {features.map((feature) => (
+            <article
+              key={feature.title}
+              className="rounded-3xl border border-slate-200 bg-white p-6 text-center shadow-[0_18px_40px_-34px_rgba(15,23,42,0.22)]"
+            >
+              <h2 className="text-base font-semibold text-slate-900">{feature.title}</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">{feature.text}</p>
+            </article>
+          ))}
         </section>
 
-        <footer className="footer">
+        <footer className="mt-12 text-sm text-slate-500">
           © 2026 Gasilstvo – Evidenca intervencij
-          <span className="phase"> • Phase 2</span>
+          <span className="text-slate-300"> • Phase 2</span>
         </footer>
-      </main>
-
-      <style jsx>{`
-        .wrapper {
-          min-height: 100vh;
-          background: #fafafa;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          padding: 60px 20px;
-        }
-
-        .hero {
-          width: 100%;
-          max-width: 900px;
-        }
-
-        .card {
-          background: white;
-          border-radius: 16px;
-          padding: 48px;
-          text-align: center;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-        }
-
-        h1 {
-          font-size: 36px;
-          line-height: 1.2;
-          margin-bottom: 16px;
-        }
-
-        .subtitle {
-          color: #555;
-          font-size: 16px;
-          max-width: 600px;
-          margin: 0 auto 28px;
-        }
-
-        .cta {
-          background: #dc2626;
-          color: white;
-          border: none;
-          padding: 14px 28px;
-          border-radius: 10px;
-          font-size: 15px;
-          cursor: pointer;
-        }
-
-        .cta:hover {
-          background: #b91c1c;
-        }
-
-        .hint {
-          margin-top: 14px;
-          font-size: 13px;
-          color: #777;
-        }
-
-        .features {
-          margin-top: 50px;
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          gap: 24px;
-          width: 100%;
-          max-width: 900px;
-        }
-
-        .feature {
-          background: white;
-          border-radius: 14px;
-          padding: 24px;
-          text-align: center;
-          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
-        }
-
-        .feature h3 {
-          margin-bottom: 8px;
-          font-size: 16px;
-        }
-
-        .feature p {
-          font-size: 14px;
-          color: #666;
-        }
-
-        .footer {
-          margin-top: 60px;
-          font-size: 13px;
-          color: #777;
-        }
-
-        .phase {
-          color: #bbb;
-        }
-      `}</style>
-    </>
+      </div>
+    </main>
   );
 }

@@ -30,10 +30,8 @@ function roleLabel(role?: string | null) {
       return "Super admin";
     case "ADMIN":
       return "Administrator";
-    case "POVELJNIK":
-      return "Poveljnik";
-    case "CLAN":
-      return "Član";
+    case "UPORABNIK":
+      return "Uporabnik";
     default:
       return role ?? "—";
   }
@@ -51,9 +49,7 @@ export default function Sidebar() {
     : session?.user?.gd_name?.trim() || "Gasilstvo";
 
   const canSeeUsers =
-    isSuperAdmin ||
-    (userRole ?? "").toUpperCase() === "ADMIN" ||
-    (userRole ?? "").toUpperCase() === "POVELJNIK";
+    isSuperAdmin || (userRole ?? "").toUpperCase() === "ADMIN";
 
   return (
     <div className="flex h-screen flex-col bg-white">

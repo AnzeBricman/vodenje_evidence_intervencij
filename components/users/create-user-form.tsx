@@ -6,11 +6,12 @@ import { ROLE_LABEL, ROLES } from "@/lib/roles";
 
 export default function CreateUserForm() {
   const router = useRouter();
+  const roleOptions = [ROLES.ADMIN, ROLES.UPORABNIK];
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<string>(ROLES.CLAN);
+  const [role, setRole] = useState<string>(ROLES.UPORABNIK);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,7 +19,7 @@ export default function CreateUserForm() {
     setName("");
     setEmail("");
     setPassword("");
-    setRole(ROLES.CLAN);
+    setRole(ROLES.UPORABNIK);
     setError(null);
   };
 
@@ -113,9 +114,9 @@ export default function CreateUserForm() {
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
               >
-                {Object.keys(ROLE_LABEL).map((k) => (
-                  <option key={k} value={k}>
-                    {(ROLE_LABEL as any)[k]}
+                {roleOptions.map((roleOption) => (
+                  <option key={roleOption} value={roleOption}>
+                    {ROLE_LABEL[roleOption]}
                   </option>
                 ))}
               </select>

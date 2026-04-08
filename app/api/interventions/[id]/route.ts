@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { ROLES } from "@/lib/roles";
 
 function canManageInterventions(role?: string) {
-  return role === ROLES.ADMIN || role === ROLES.POVELJNIK;
+  return role === ROLES.ADMIN;
 }
 
 export async function PATCH(

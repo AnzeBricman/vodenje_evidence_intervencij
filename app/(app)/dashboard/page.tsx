@@ -1,10 +1,12 @@
 import PageHeader from "@/components/common/page-header";
 import { requireUser } from "@/lib/auth-guards";
+import { formatDurationHours } from "@/lib/format-duration";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 
 export default async function DashboardPage() {
   const user = await requireUser();
+  const gdId = Number((user as any).id_gd);
 
   if ((user as any).role === "SUPER_ADMIN") {
     redirect("/admin");
@@ -30,26 +32,34 @@ export default async function DashboardPage() {
     lastInterventions,
   ] = await Promise.all([
     prisma.intervencija.count({
-      where: activeStatus?.id_s ? { id_s: activeStatus.id_s } : undefined,
+      where: activeStatus?.id_s
+        ? { id_s: activeStatus.id_s, id_gd: gdId }
+        : { id_gd: gdId },
     }),
     prisma.intervencija.count({
       where: closedStatus?.id_s
         ? {
+            id_gd: gdId,
             id_s: closedStatus.id_s,
             zacetek: { gte: yearStart, lt: nextYearStart },
           }
         : {
+            id_gd: gdId,
             zacetek: { gte: yearStart, lt: nextYearStart },
           },
     }),
     prisma.intervencija.aggregate({
       where: {
+        id_gd: gdId,
         zacetek: { gte: yearStart, lt: nextYearStart },
       },
       _sum: { trajanje_ur: true },
     }),
-    prisma.uporabnik.count(),
+    prisma.uporabnik.count({
+      where: { id_gd: gdId },
+    }),
     prisma.intervencija.findMany({
+      where: { id_gd: gdId },
       orderBy: { zacetek: "desc" },
       take: 3,
       include: {
@@ -64,7 +74,10 @@ export default async function DashboardPage() {
   const typesAgg = await prisma.intervencija.groupBy({
     by: ["id_it"],
     _count: { id_i: true },
-    where: { zacetek: { gte: yearStart, lt: nextYearStart } },
+    where: {
+      id_gd: gdId,
+      zacetek: { gte: yearStart, lt: nextYearStart },
+    },
   });
 
   const typeIds = typesAgg.map((t) => t.id_it);
@@ -107,7 +120,7 @@ export default async function DashboardPage() {
 
               <div className="grid gap-4 sm:grid-cols-3">
                 <HeroMetric label="Zaključene letos" value={closedThisYearCount} />
-                <HeroMetric label="Skupne ure letos" value={`${totalHours.toFixed(2)} h`} />
+                <HeroMetric label="Skupne ure letos" value={formatDurationHours(totalHours)} />
                 <HeroMetric label="Aktivni člani" value={usersCount} />
               </div>
             </div>
@@ -123,7 +136,7 @@ export default async function DashboardPage() {
             <StatCard
               eyebrow="Leto"
               title="Skupne ure dela"
-              value={`${totalHours.toFixed(2)} h`}
+              value={formatDurationHours(totalHours)}
               tone="slate"
             />
             <StatCard
@@ -212,7 +225,7 @@ export default async function DashboardPage() {
           <Panel title="Ekipa" subtitle="Osnovni operativni okvir društva">
             <div className="grid gap-4 sm:grid-cols-2">
               <MiniCard label="Aktivni člani" value={usersCount} />
-              <MiniCard label="Skupne ure letos" value={`${totalHours.toFixed(2)} h`} />
+              <MiniCard label="Skupne ure letos" value={formatDurationHours(totalHours)} />
             </div>
           </Panel>
         </section>

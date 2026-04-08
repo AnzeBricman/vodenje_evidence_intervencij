@@ -9,8 +9,8 @@ const roleMap: Record<string, Role> = {
   "Super Admin": "SUPER_ADMIN",
   Super_Admin: "SUPER_ADMIN",
   Administrator: "ADMIN",
-  Poveljnik: "POVELJNIK",
-  Gasilec: "CLAN",
+  Poveljnik: "UPORABNIK",
+  Gasilec: "UPORABNIK",
   Uporabnik: "UPORABNIK",
 };
 

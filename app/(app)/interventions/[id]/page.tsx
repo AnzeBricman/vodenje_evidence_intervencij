@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import React from "react";
+import { formatDurationHours } from "@/lib/format-duration";
 
 type TabKey = "osnovno" | "prisotnost" | "oprema" | "stroski";
 
@@ -81,7 +82,7 @@ export default async function InterventionDetailPage({
 
 
   const trajanje = Number(intervencija.trajanje_ur ?? 0); // ure
-  const skupneUre = trajanje.toFixed(2);
+  const skupneUre = formatDurationHours(trajanje);
 
   const claniCount = intervencija.intervencije_uporabnik.length;
   const vozilaCount = intervencija.intervencije_vozila.length;
@@ -191,7 +192,7 @@ export default async function InterventionDetailPage({
                   label="Tip časa"
                   value={intervencija.tip_casa?.ime_tipa ?? "—"}
                 />
-                <Info label="Trajanje" value={`${trajanje.toFixed(2)} h`} />
+                <Info label="Trajanje" value={formatDurationHours(trajanje)} />
               </div>
             </SectionCard>
           )}
@@ -301,7 +302,7 @@ export default async function InterventionDetailPage({
                             {r.io.oprema.kategorija_oprema?.ime_kategorije ?? "—"}
                           </td>
                           <td className="py-3 pr-4">{r.kolicina}</td>
-                          <td className="py-3 pr-4">{r.ure.toFixed(2)}</td>
+                          <td className="py-3 pr-4">{formatDurationHours(r.ure)}</td>
                           <td className="py-3 pr-4">{eur(r.cenaOpreme)}</td>
                           <td className="py-3 pr-0 text-right font-semibold">
                             {eur(r.strosek)}
@@ -342,7 +343,7 @@ export default async function InterventionDetailPage({
                     <tr className="border-b">
                       <td className="py-3 pr-4 font-medium">Moštvo</td>
                       <td className="py-3 pr-4 text-gray-500">
-                        {claniCount} član(ov) × {trajanje.toFixed(2)} h ×{" "}
+                        {claniCount} član(ov) × {formatDurationHours(trajanje)} ×{" "}
                         {eur(cenaTipaCasa)}/h ({intervencija.tip_casa?.ime_tipa})
                       </td>
                       <td className="py-3 pr-0 text-right font-semibold">
@@ -354,7 +355,7 @@ export default async function InterventionDetailPage({
                       <tr key={`v-${r.iv.id_iv}`} className="border-b">
                         <td className="py-3 pr-4 font-medium">Vozilo</td>
                         <td className="py-3 pr-4 text-gray-500">
-                          {r.iv.vozilo.ime} × {trajanje.toFixed(2)} h ×{" "}
+                          {r.iv.vozilo.ime} × {formatDurationHours(trajanje)} ×{" "}
                           {eur(r.cenaVozila)}/h
                         </td>
                         <td className="py-3 pr-0 text-right font-semibold">
@@ -368,7 +369,7 @@ export default async function InterventionDetailPage({
                         <td className="py-3 pr-4 font-medium">Oprema</td>
                         <td className="py-3 pr-4 text-gray-500">
                           {r.io.oprema.ime_opreme} — {r.kolicina} kos ×{" "}
-                          {r.ure.toFixed(2)} h × {eur(r.cenaOpreme)}/h
+                          {formatDurationHours(r.ure)} × {eur(r.cenaOpreme)}/h
                         </td>
                         <td className="py-3 pr-0 text-right font-semibold">
                           {eur(r.strosek)}
@@ -398,7 +399,7 @@ export default async function InterventionDetailPage({
             <div className="mb-4 text-sm font-semibold">Povzetek</div>
 
             <div className="space-y-3">
-              <Kpi label="Skupne ure" value={`${skupneUre} h`} />
+              <Kpi label="Skupne ure" value={skupneUre} />
               <Kpi label="Skupni stroški" value={eur(skupniStroski)} />
 
               <div className="my-3 border-t" />
