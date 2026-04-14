@@ -1,4 +1,5 @@
 import Link from "next/link";
+import ContactForm from "@/components/marketing/contact-form";
 
 const features = [
   {
@@ -67,8 +68,45 @@ export default function HomePage() {
           ))}
         </section>
 
+        <section className="mt-12 grid w-full max-w-5xl gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+          <div className="rounded-[28px] border border-slate-200 bg-white p-8 shadow-[0_18px_40px_-34px_rgba(15,23,42,0.22)]">
+            <div className="inline-flex rounded-full border border-red-100 bg-red-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-red-600">
+              Kontakt
+            </div>
+            <h2 className="mt-5 text-3xl font-semibold tracking-tight text-slate-900">
+              Imaš vprašanje ali želiš predstavitev?
+            </h2>
+            <p className="mt-4 text-sm leading-7 text-slate-600 sm:text-base">
+              Piši nam, če želiš predstavitev sistema, pomoč pri postavitvi ali
+              dodatne informacije za svoje društvo.
+            </p>
+
+            <div className="mt-8 space-y-4 text-sm text-slate-600">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <p className="font-medium text-slate-900">Hitri odgovor</p>
+                <p className="mt-1">Odgovorimo na osnovna vprašanja in pomagamo pri zagonu.</p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <p className="font-medium text-slate-900">Predstavitev za društvo</p>
+                <p className="mt-1">Lahko se dogovorimo za kratek pregled funkcionalnosti.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-[28px] border border-slate-200 bg-white p-8 shadow-[0_18px_40px_-34px_rgba(15,23,42,0.22)]">
+            <h2 className="text-2xl font-semibold text-slate-900">Pošlji sporočilo</h2>
+            <p className="mt-2 text-sm text-slate-600">
+              Izpolni obrazec in odgovorili bomo na vpisani email.
+            </p>
+
+            <div className="mt-6">
+              <ContactForm />
+            </div>
+          </div>
+        </section>
+
         <footer className="mt-12 text-sm text-slate-500">
-          © 2026 Gasilstvo – Evidenca intervencij
+          © 2026 Gasilstvo - Evidenca intervencij
           <span className="text-slate-300"> • Phase 2</span>
         </footer>
       </div>

@@ -8,6 +8,27 @@ function requireEnv(name: string) {
   return value;
 }
 
+function createTransport() {
+  const host = requireEnv("SMTP_HOST");
+  const port = Number(requireEnv("SMTP_PORT"));
+  const user = requireEnv("SMTP_USER");
+  const pass = requireEnv("SMTP_PASS");
+
+  return nodemailer.createTransport({
+    host,
+    port,
+    secure: port === 465,
+    auth: {
+      user,
+      pass,
+    },
+  });
+}
+
+function getFromAddress() {
+  return requireEnv("SMTP_FROM");
+}
+
 export async function sendCredentialsEmail({
   to,
   fullName,
@@ -21,24 +42,10 @@ export async function sendCredentialsEmail({
   roleLabel: string;
   password: string;
 }) {
-  const host = requireEnv("SMTP_HOST");
-  const port = Number(requireEnv("SMTP_PORT"));
-  const user = requireEnv("SMTP_USER");
-  const pass = requireEnv("SMTP_PASS");
-  const from = requireEnv("SMTP_FROM");
-
-  const transporter = nodemailer.createTransport({
-    host,
-    port,
-    secure: port === 465,
-    auth: {
-      user,
-      pass,
-    },
-  });
+  const transporter = createTransport();
 
   await transporter.sendMail({
-    from,
+    from: getFromAddress(),
     to,
     subject: `Dostop do sistema za društvo ${societyName}`,
     text: [
@@ -64,6 +71,92 @@ export async function sendCredentialsEmail({
         Začasno geslo: ${password}</p>
         <p>Priporočilo: po prvi prijavi geslo takoj zamenjaj v svojem profilu.</p>
         <p>Lep pozdrav,<br />Sistem za vodenje evidenc intervencij</p>
+      </div>
+    `,
+  });
+}
+
+export async function sendPasswordResetEmail({
+  to,
+  fullName,
+  resetUrl,
+}: {
+  to: string;
+  fullName?: string | null;
+  resetUrl: string;
+}) {
+  const transporter = createTransport();
+
+  await transporter.sendMail({
+    from: getFromAddress(),
+    to,
+    subject: "Ponastavitev gesla",
+    text: [
+      `Pozdravljen${fullName ? `, ${fullName}` : ""}.`,
+      "",
+      "Prejeli smo zahtevo za ponastavitev gesla.",
+      "Za nastavitev novega gesla odpri spodnjo povezavo:",
+      resetUrl,
+      "",
+      "Povezava velja 60 minut in se lahko uporabi samo enkrat.",
+      "Če zahteve nisi podal ti, lahko to sporočilo ignoriraš.",
+      "",
+      "Lep pozdrav,",
+      "Sistem za vodenje evidenc intervencij",
+    ].join("\n"),
+    html: `
+      <div style="font-family: Arial, Helvetica, sans-serif; color: #0f172a; line-height: 1.6;">
+        <p>Pozdravljen${fullName ? `, <strong>${fullName}</strong>` : ""}.</p>
+        <p>Prejeli smo zahtevo za ponastavitev gesla.</p>
+        <p>
+          Za nastavitev novega gesla odpri spodnjo povezavo:
+        </p>
+        <p>
+          <a href="${resetUrl}" style="color: #dc2626;">Nastavi novo geslo</a>
+        </p>
+        <p style="word-break: break-all; color: #475569;">${resetUrl}</p>
+        <p>Povezava velja 60 minut in se lahko uporabi samo enkrat.</p>
+        <p>Če zahteve nisi podal ti, lahko to sporočilo ignoriraš.</p>
+        <p>Lep pozdrav,<br />Sistem za vodenje evidenc intervencij</p>
+      </div>
+    `,
+  });
+}
+
+export async function sendContactEmail({
+  fullName,
+  email,
+  message,
+}: {
+  fullName: string;
+  email: string;
+  message: string;
+}) {
+  const transporter = createTransport();
+  const from = getFromAddress();
+  const to = process.env.CONTACT_TO || from;
+
+  await transporter.sendMail({
+    from,
+    to,
+    replyTo: email,
+    subject: `Kontaktni obrazec: ${fullName}`,
+    text: [
+      "Prejeto sporočilo iz začetne strani aplikacije.",
+      "",
+      `Ime: ${fullName}`,
+      `Email: ${email}`,
+      "",
+      "Sporočilo:",
+      message,
+    ].join("\n"),
+    html: `
+      <div style="font-family: Arial, Helvetica, sans-serif; color: #0f172a; line-height: 1.6;">
+        <p>Prejeto sporočilo iz začetne strani aplikacije.</p>
+        <p><strong>Ime:</strong> ${fullName}<br />
+        <strong>Email:</strong> ${email}</p>
+        <p><strong>Sporočilo:</strong></p>
+        <p style="white-space: pre-wrap;">${message}</p>
       </div>
     `,
   });

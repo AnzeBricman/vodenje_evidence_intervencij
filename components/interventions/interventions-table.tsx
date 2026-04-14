@@ -27,10 +27,12 @@ type InterventionsTableProps = {
   interventions: InterventionRow[];
   statuses: StatusOption[];
   canManageStatus: boolean;
+  canDelete: boolean;
 };
 
 function formatDateTime(value: string | null) {
   if (!value) return "—";
+
   return new Intl.DateTimeFormat("sl-SI", {
     day: "2-digit",
     month: "2-digit",
@@ -44,6 +46,7 @@ export default function InterventionsTable({
   interventions,
   statuses,
   canManageStatus,
+  canDelete,
 }: InterventionsTableProps) {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -58,6 +61,7 @@ export default function InterventionsTable({
       const ref = item.zap_st.toLowerCase();
       const title = item.naslov.toLowerCase();
       const location = item.lokacija?.toLowerCase() ?? "";
+
       return (
         ref.includes(normalizedQuery) ||
         title.includes(normalizedQuery) ||
@@ -79,6 +83,29 @@ export default function InterventionsTable({
 
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error || "Posodobitev statusa ni uspela.");
+
+      router.refresh();
+    } catch (err: any) {
+      setError(err?.message ?? String(err));
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const deleteIntervention = async (interventionId: number) => {
+    const confirmed = window.confirm("Ali res želiš izbrisati to intervencijo?");
+    if (!confirmed) return;
+
+    setBusyId(interventionId);
+    setError(null);
+
+    try {
+      const res = await fetch(`/api/interventions/${interventionId}`, {
+        method: "DELETE",
+      });
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || "Brisanje intervencije ni uspelo.");
 
       router.refresh();
     } catch (err: any) {
@@ -113,6 +140,7 @@ export default function InterventionsTable({
               <th className="px-4 py-2">Začetek</th>
               <th className="px-4 py-2">Trajanje</th>
               <th className="px-4 py-2">Status</th>
+              {canDelete ? <th className="px-4 py-2 text-right">Akcije</th> : null}
             </tr>
           </thead>
           <tbody>
@@ -130,10 +158,8 @@ export default function InterventionsTable({
                 <td className="px-4 py-4 text-gray-500">{item.lokacija ?? "—"}</td>
                 <td className="px-4 py-4">{item.vrsta ?? "—"}</td>
                 <td className="px-4 py-4 text-gray-500">{formatDateTime(item.zacetek)}</td>
-                <td className="px-4 py-4 text-gray-500">
-                  {formatDurationHours(item.trajanje_ur)}
-                </td>
-                <td className="rounded-r-xl px-4 py-4">
+                <td className="px-4 py-4 text-gray-500">{formatDurationHours(item.trajanje_ur)}</td>
+                <td className="px-4 py-4">
                   {canManageStatus ? (
                     <select
                       className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs shadow-sm"
@@ -153,12 +179,27 @@ export default function InterventionsTable({
                     </span>
                   )}
                 </td>
+                {canDelete ? (
+                  <td className="rounded-r-xl px-4 py-4 text-right">
+                    <button
+                      type="button"
+                      disabled={busyId === item.id_i}
+                      onClick={() => deleteIntervention(item.id_i)}
+                      className="rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-medium text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Izbriši
+                    </button>
+                  </td>
+                ) : null}
               </tr>
             ))}
 
             {filteredInterventions.length === 0 && (
               <tr>
-                <td colSpan={7} className="py-12 text-center text-sm text-gray-500">
+                <td
+                  colSpan={canDelete ? 8 : 7}
+                  className="py-12 text-center text-sm text-gray-500"
+                >
                   {interventions.length === 0
                     ? "Ni intervencij v bazi."
                     : "Ni zadetkov za iskani niz."}

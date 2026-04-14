@@ -144,9 +144,24 @@ model uporabnik {
 
   intervencije_uporabnik intervencije_uporabnik[]
   intervencije_vozila_uporabniki intervencije_vozila_uporabniki[]
+  password_reset_tokens password_reset_token[]
 
   @@unique([email])
   @@map("uporabnik")
+}
+
+model password_reset_token {
+  id_prt Int @id @default(autoincrement())
+  token_hash String @unique @db.VarChar(64)
+  expires_at DateTime @db.Timestamp(6)
+  used_at DateTime? @db.Timestamp(6)
+  created_at DateTime @default(now()) @db.Timestamp(6)
+
+  id_u Int
+  uporabnik uporabnik @relation(fields: [id_u], references: [id_u], onDelete: Cascade)
+
+  @@index([id_u])
+  @@map("password_reset_token")
 }
 
 model intervencija {

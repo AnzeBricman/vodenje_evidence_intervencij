@@ -32,6 +32,7 @@ export default async function InterventionsPage() {
 
   const canCreate = hasPermission((user as any).role, "INTERVENTION_CREATE");
   const canManageStatus = hasPermission((user as any).role, "INTERVENTION_EDIT");
+  const canDelete = hasPermission((user as any).role, "INTERVENTION_DELETE");
 
   const serializedInterventions = interventions.map((item) => ({
     id_i: item.id_i,
@@ -63,6 +64,7 @@ export default async function InterventionsPage() {
         interventions={serializedInterventions}
         statuses={statuses.map((status) => ({ id: status.id_s, label: status.ime_statusa }))}
         canManageStatus={canManageStatus}
+        canDelete={canDelete}
       />
     </>
   );

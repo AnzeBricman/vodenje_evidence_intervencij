@@ -10,7 +10,6 @@ export default function CreateUserForm() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [role, setRole] = useState<string>(ROLES.UPORABNIK);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -18,7 +17,6 @@ export default function CreateUserForm() {
   const reset = () => {
     setName("");
     setEmail("");
-    setPassword("");
     setRole(ROLES.UPORABNIK);
     setError(null);
   };
@@ -32,7 +30,7 @@ export default function CreateUserForm() {
       const res = await fetch("/api/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, role }),
+        body: JSON.stringify({ name, email, role }),
       });
 
       const json = await res.json();
@@ -52,7 +50,7 @@ export default function CreateUserForm() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="rounded-lg border px-3 py-2 text-sm bg-white"
+        className="rounded-lg border bg-white px-3 py-2 text-sm"
         aria-haspopup="dialog"
       >
         Dodaj
@@ -74,7 +72,7 @@ export default function CreateUserForm() {
                 aria-label="Zapri"
                 className="-mr-2 rounded p-1 text-muted-foreground hover:bg-muted"
               >
-                ✕
+                ×
               </button>
             </div>
 
@@ -98,16 +96,6 @@ export default function CreateUserForm() {
                 required
               />
 
-              <label className="text-sm">Geslo</label>
-              <input
-                className="rounded-lg border px-3 py-2 text-sm"
-                placeholder="Geslo"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-
               <label className="text-sm">Vloga</label>
               <select
                 className="rounded-lg border px-3 py-2 text-sm"
@@ -120,6 +108,10 @@ export default function CreateUserForm() {
                   </option>
                 ))}
               </select>
+
+              <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                Sistem bo ustvaril naključno začasno geslo in ga poslal na vpisani email.
+              </div>
 
               <div className="mt-4 flex items-center justify-end gap-2">
                 <button

@@ -26,13 +26,12 @@ export default async function ProfilePage() {
       <div>
         <h1 className="text-4xl font-semibold tracking-tight text-slate-900">Moj profil</h1>
         <p className="mt-2 text-base text-slate-600">
-          Uredi svoj email in geslo za dostop do aplikacije.
+          Tukaj lahko spremenis svoje geslo za dostop do aplikacije.
         </p>
       </div>
 
       <ProfileSettingsForm
         name={user.ime}
-        email={user.email}
         role={ROLE_LABEL[role] ?? user.vloga_v_aplikaciji.ime}
         societyName={user.gasilni_dom.ime}
       />

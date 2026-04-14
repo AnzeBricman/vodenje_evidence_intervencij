@@ -1,7 +1,9 @@
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/auth";
+import { sendCredentialsEmail } from "@/lib/mailer";
 import { prisma } from "@/lib/prisma";
 import { ROLE_LABEL, ROLES } from "@/lib/roles";
 
@@ -14,7 +16,8 @@ const ALLOWED_ROLES = new Set([ROLES.ADMIN, ROLES.UPORABNIK]);
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    const user = session?.user as any;
+    const user = session?.user as { id?: string; role?: string; id_gd?: number } | undefined;
+
     if (!user || !canManageUsers(user.role)) {
       return NextResponse.json({ error: "Ni dovoljenja." }, { status: 403 });
     }
@@ -22,36 +25,61 @@ export async function POST(req: Request) {
     const body = await req.json();
     const email = String(body.email ?? "").trim().toLowerCase();
     const ime = String(body.name ?? "").trim();
-    const password = String(body.password ?? "");
     const role = String(body.role ?? ROLES.UPORABNIK);
 
-    if (!email || !ime || !password) {
-      return NextResponse.json({ error: "Manjkajoči podatki." }, { status: 400 });
+    if (!email || !ime) {
+      return NextResponse.json({ error: "Manjkajoci podatki." }, { status: 400 });
     }
 
-    if (!ALLOWED_ROLES.has(role as any)) {
+    if (!ALLOWED_ROLES.has(role as typeof ROLES.ADMIN | typeof ROLES.UPORABNIK)) {
       return NextResponse.json({ error: "Neveljavna vloga." }, { status: 400 });
     }
 
+    if (!user.id_gd) {
+      return NextResponse.json({ error: "Uporabnik nima društva." }, { status: 400 });
+    }
+
     const roleLabel = ROLE_LABEL[role as keyof typeof ROLE_LABEL] ?? ROLE_LABEL[ROLES.UPORABNIK];
+    const drustvo = await prisma.gasilni_dom.findUnique({
+      where: { id_gd: user.id_gd },
+      select: { ime: true },
+    });
+
+    if (!drustvo) {
+      return NextResponse.json({ error: "Društvo ni bilo najdeno." }, { status: 400 });
+    }
 
     let vloga = await prisma.vloga_v_aplikaciji.findFirst({ where: { ime: roleLabel } });
     if (!vloga) {
       vloga = await prisma.vloga_v_aplikaciji.create({ data: { ime: roleLabel } });
     }
 
-    const hashed = await bcrypt.hash(password, 10);
+    const temporaryPassword = crypto.randomBytes(9).toString("base64url");
+    const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
 
     const created = await prisma.uporabnik.create({
       data: {
         email,
         ime,
-        geslo: hashed,
-        id_gd: user.id_gd ?? 0,
+        geslo: hashedPassword,
+        id_gd: user.id_gd,
         id_vva: vloga.id_vva,
         kreiran: new Date(),
       },
     });
+
+    try {
+      await sendCredentialsEmail({
+        to: email,
+        fullName: ime,
+        societyName: drustvo.ime,
+        roleLabel,
+        password: temporaryPassword,
+      });
+    } catch (mailError) {
+      await prisma.uporabnik.delete({ where: { id_u: created.id_u } });
+      throw mailError;
+    }
 
     return NextResponse.json({ ok: true, user: { id: created.id_u, email: created.email } });
   } catch (err: any) {
@@ -63,7 +91,8 @@ export async function POST(req: Request) {
 export async function DELETE(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    const user = session?.user as any;
+    const user = session?.user as { id?: string; role?: string; id_gd?: number } | undefined;
+
     if (!user || !canManageUsers(user.role)) {
       return NextResponse.json({ error: "Ni dovoljenja." }, { status: 403 });
     }

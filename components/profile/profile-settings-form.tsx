@@ -1,59 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import { useSession } from "next-auth/react";
 
 type ProfileSettingsFormProps = {
   name: string;
-  email: string;
   role: string;
   societyName: string;
 };
 
 export default function ProfileSettingsForm({
   name,
-  email,
   role,
   societyName,
 }: ProfileSettingsFormProps) {
-  const { update } = useSession();
-
-  const [nextEmail, setNextEmail] = useState(email);
-  const [emailLoading, setEmailLoading] = useState(false);
-  const [emailError, setEmailError] = useState<string | null>(null);
-  const [emailSuccess, setEmailSuccess] = useState<string | null>(null);
-
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
-
-  const saveEmail = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setEmailError(null);
-    setEmailSuccess(null);
-    setEmailLoading(true);
-
-    try {
-      const res = await fetch("/api/profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: nextEmail }),
-      });
-
-      const json = await res.json();
-      if (!res.ok) throw new Error(json?.error || "Shranjevanje ni uspelo.");
-
-      await update({ email: json.email });
-      setEmailSuccess("Email je bil uspešno posodobljen.");
-    } catch (err: any) {
-      setEmailError(err?.message ?? "Shranjevanje ni uspelo.");
-    } finally {
-      setEmailLoading(false);
-    }
-  };
 
   const savePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,7 +62,7 @@ export default function ProfileSettingsForm({
           </p>
           <h2 className="mt-2 text-2xl font-semibold text-slate-900">{name}</h2>
           <p className="mt-2 text-sm text-slate-600">
-            Tukaj urejaš svoje kontaktne podatke in dostop do aplikacije.
+            Tukaj urejaš svoje podatke in dostop do aplikacije.
           </p>
         </div>
 
@@ -115,41 +80,6 @@ export default function ProfileSettingsForm({
       </section>
 
       <div className="grid gap-6">
-        <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_45px_-32px_rgba(15,23,42,0.25)]">
-          <div className="mb-5">
-            <h2 className="text-xl font-semibold text-slate-900">Email naslov</h2>
-            <p className="mt-1 text-sm text-slate-600">
-              Spremeni email, na katerega se prijavljaš v sistem.
-            </p>
-          </div>
-
-          <form className="grid gap-4" onSubmit={saveEmail}>
-            <div className="grid gap-2">
-              <label className="text-sm font-medium text-slate-700">Email</label>
-              <input
-                type="email"
-                value={nextEmail}
-                onChange={(e) => setNextEmail(e.target.value)}
-                className="rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100"
-                required
-              />
-            </div>
-
-            <div className="flex items-center justify-end">
-              <button
-                type="submit"
-                disabled={emailLoading}
-                className="rounded-2xl bg-red-600 px-5 py-3 text-sm font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-red-300"
-              >
-                Shrani email
-              </button>
-            </div>
-
-            {emailError && <p className="text-sm text-red-600">{emailError}</p>}
-            {emailSuccess && <p className="text-sm text-emerald-600">{emailSuccess}</p>}
-          </form>
-        </section>
-
         <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_45px_-32px_rgba(15,23,42,0.25)]">
           <div className="mb-5">
             <h2 className="text-xl font-semibold text-slate-900">Geslo</h2>
