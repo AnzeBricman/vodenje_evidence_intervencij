@@ -100,6 +100,9 @@ export default async function DashboardPage() {
       ) => b.count - a.count,
     );
 
+  type TypeCountRow = (typeof typesWithCounts)[number];
+  type LastInterventionRow = (typeof lastInterventions)[number];
+
   const currentYearLabel = now.getFullYear();
 
   return (
@@ -161,7 +164,7 @@ export default async function DashboardPage() {
               <EmptyState text="Trenutno ni nobene intervencije." />
             ) : (
               <div className="space-y-3">
-                {lastInterventions.map((item) => (
+                {lastInterventions.map((item: LastInterventionRow) => (
                   <div
                     key={item.id_i}
                     className="flex items-start justify-between gap-4 rounded-2xl border border-gray-200 bg-gray-50/80 px-4 py-4 transition hover:bg-white hover:shadow-sm"
@@ -196,7 +199,7 @@ export default async function DashboardPage() {
               <EmptyState text="Letos še ni podatkov." />
             ) : (
               <div className="space-y-3">
-                {typesWithCounts.map((item, index) => (
+                {typesWithCounts.map((item: TypeCountRow, index: number) => (
                   <div
                     key={item.id_it}
                     className="space-y-2 rounded-2xl border border-gray-200 bg-gray-50/80 px-4 py-4"
@@ -214,7 +217,10 @@ export default async function DashboardPage() {
                           width: `${Math.max(
                             12,
                             (item.count /
-                              Math.max(...typesWithCounts.map((entry) => entry.count), 1)) *
+                              Math.max(
+                                ...typesWithCounts.map((entry: TypeCountRow) => entry.count),
+                                1,
+                              )) *
                               100,
                           )}%`,
                           opacity: 1 - index * 0.12,
