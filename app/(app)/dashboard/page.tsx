@@ -1,14 +1,14 @@
+import { redirect } from "next/navigation";
 import PageHeader from "@/components/common/page-header";
 import { requireUser } from "@/lib/auth-guards";
 import { formatDurationHours } from "@/lib/format-duration";
 import { prisma } from "@/lib/prisma";
-import { redirect } from "next/navigation";
 
 export default async function DashboardPage() {
   const user = await requireUser();
-  const gdId = Number((user as any).id_gd);
+  const gdId = Number((user as { id_gd?: number }).id_gd);
 
-  if ((user as any).role === "SUPER_ADMIN") {
+  if ((user as { role?: string }).role === "SUPER_ADMIN") {
     redirect("/admin");
   }
 
@@ -32,9 +32,7 @@ export default async function DashboardPage() {
     lastInterventions,
   ] = await Promise.all([
     prisma.intervencija.count({
-      where: activeStatus?.id_s
-        ? { id_s: activeStatus.id_s, id_gd: gdId }
-        : { id_gd: gdId },
+      where: activeStatus?.id_s ? { id_s: activeStatus.id_s, id_gd: gdId } : { id_gd: gdId },
     }),
     prisma.intervencija.count({
       where: closedStatus?.id_s
@@ -80,16 +78,20 @@ export default async function DashboardPage() {
     },
   });
 
-  const typeIds = typesAgg.map((t) => t.id_it);
+  type TypesAggRow = (typeof typesAgg)[number];
+
+  const typeIds = typesAgg.map((entry: TypesAggRow) => entry.id_it);
   const types = await prisma.intervencija_tip.findMany({
     where: { id_it: { in: typeIds } },
   });
 
+  type TypeRow = (typeof types)[number];
+
   const typesWithCounts = typesAgg
-    .map((row) => ({
+    .map((row: TypesAggRow) => ({
       id_it: row.id_it,
       count: row._count.id_i,
-      tip: types.find((t) => t.id_it === row.id_it)?.tip ?? "Neznano",
+      tip: types.find((entry: TypeRow) => entry.id_it === row.id_it)?.tip ?? "Neznano",
     }))
     .sort((a, b) => b.count - a.count);
 
@@ -149,10 +151,7 @@ export default async function DashboardPage() {
         </section>
 
         <section className="grid gap-6 xl:grid-cols-[1.6fr_1fr]">
-          <Panel
-            title="Zadnje intervencije"
-            subtitle="Zadnji 3 dogodki v sistemu"
-          >
+          <Panel title="Zadnje intervencije" subtitle="Zadnji 3 dogodki v sistemu">
             {lastInterventions.length === 0 ? (
               <EmptyState text="Trenutno ni nobene intervencije." />
             ) : (
@@ -164,7 +163,7 @@ export default async function DashboardPage() {
                   >
                     <div className="min-w-0">
                       <div className="text-sm font-semibold text-gray-900">
-                        {(item.zap_st || "(brez st.)") + " | " + item.naslov}
+                        {(item.zap_st || "(brez št.)") + " | " + item.naslov}
                       </div>
                       <div className="mt-1 text-sm text-gray-500">
                         {(item.lokacija || "Lokacija ni vpisana") +
@@ -193,7 +192,10 @@ export default async function DashboardPage() {
             ) : (
               <div className="space-y-3">
                 {typesWithCounts.map((item, index) => (
-                  <div key={item.id_it} className="space-y-2 rounded-2xl border border-gray-200 bg-gray-50/80 px-4 py-4">
+                  <div
+                    key={item.id_it}
+                    className="space-y-2 rounded-2xl border border-gray-200 bg-gray-50/80 px-4 py-4"
+                  >
                     <div className="flex items-center justify-between gap-3">
                       <div className="text-sm font-medium text-gray-800">{item.tip}</div>
                       <div className="rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-semibold text-gray-700">
