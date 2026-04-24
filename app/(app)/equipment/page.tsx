@@ -20,7 +20,11 @@ export default async function EquipmentPage() {
     prisma.stanje_opreme.findMany({ orderBy: { ime_stanja: "asc" } }),
   ]);
 
-  const serializedEquipment = equipment.map((item) => ({
+  type EquipmentRow = (typeof equipment)[number];
+  type CategoryRow = (typeof categories)[number];
+  type StateRow = (typeof states)[number];
+
+  const serializedEquipment = equipment.map((item: EquipmentRow) => ({
     id_o: item.id_o,
     ime_opreme: item.ime_opreme,
     kategorija: item.kategorija_oprema.ime_kategorije,
@@ -40,11 +44,11 @@ export default async function EquipmentPage() {
         right={
           canManageEquipment ? (
             <CreateEquipmentForm
-              categories={categories.map((category) => ({
+              categories={categories.map((category: CategoryRow) => ({
                 id: category.id_ko,
                 label: category.ime_kategorije,
               }))}
-              states={states.map((state) => ({
+              states={states.map((state: StateRow) => ({
                 id: state.id_so,
                 label: state.ime_stanja,
               }))}
@@ -56,7 +60,7 @@ export default async function EquipmentPage() {
       <EquipmentTable
         equipment={serializedEquipment}
         canManageEquipment={canManageEquipment}
-        states={states.map((state) => ({
+        states={states.map((state: StateRow) => ({
           id: state.id_so,
           label: state.ime_stanja,
         }))}

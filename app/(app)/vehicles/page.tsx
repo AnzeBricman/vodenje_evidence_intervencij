@@ -20,7 +20,11 @@ export default async function VehiclesPage() {
     prisma.status_vozila.findMany({ orderBy: { ime_statusa: "asc" } }),
   ]);
 
-  const serializedVehicles = vehicles.map((vehicle) => ({
+  type VehicleRow = (typeof vehicles)[number];
+  type VehicleTypeRow = (typeof vehicleTypes)[number];
+  type VehicleStatusRow = (typeof vehicleStatuses)[number];
+
+  const serializedVehicles = vehicles.map((vehicle: VehicleRow) => ({
     id_v: vehicle.id_v,
     ime: vehicle.ime,
     registrska_st: vehicle.registrska_st,
@@ -40,11 +44,11 @@ export default async function VehiclesPage() {
         right={
           canManageVehicles ? (
             <CreateVehicleForm
-              vehicleTypes={vehicleTypes.map((type) => ({
+              vehicleTypes={vehicleTypes.map((type: VehicleTypeRow) => ({
                 id: type.id_tv,
                 label: type.ime_tipa,
               }))}
-              vehicleStatuses={vehicleStatuses.map((status) => ({
+              vehicleStatuses={vehicleStatuses.map((status: VehicleStatusRow) => ({
                 id: status.id_sv,
                 label: status.ime_statusa,
               }))}
@@ -56,7 +60,7 @@ export default async function VehiclesPage() {
       <VehiclesTable
         vehicles={serializedVehicles}
         canManageVehicles={canManageVehicles}
-        vehicleStatuses={vehicleStatuses.map((status) => ({
+        vehicleStatuses={vehicleStatuses.map((status: VehicleStatusRow) => ({
           id: status.id_sv,
           label: status.ime_statusa,
         }))}

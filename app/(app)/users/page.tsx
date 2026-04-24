@@ -13,7 +13,9 @@ export default async function UsersPage() {
     orderBy: { ime: "asc" },
   });
 
-  const serializedUsers = users.map((u) => ({
+  type UserRow = (typeof users)[number];
+
+  const serializedUsers = users.map((u: UserRow) => ({
     id_u: u.id_u,
     ime: u.ime,
     email: u.email,
