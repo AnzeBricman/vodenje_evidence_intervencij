@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import type { Prisma } from "@prisma/client";
 import { authOptions } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { ROLES } from "@/lib/roles";
@@ -48,10 +49,14 @@ export async function POST(req: Request) {
     const id_it = Number(body.typeId);
     const id_tc = Number(body.timeTypeId);
     const participants = ((body.participants as ParticipantInput[]) ?? []).filter(
-      (item) => item.userId && item.roleId,
+      (item: ParticipantInput) => item.userId && item.roleId,
     );
-    const vehicles = ((body.vehicles as VehicleInput[]) ?? []).filter((item) => item.vehicleId);
-    const equipment = ((body.equipment as EquipmentInput[]) ?? []).filter((item) => item.equipmentId);
+    const vehicles = ((body.vehicles as VehicleInput[]) ?? []).filter(
+      (item: VehicleInput) => item.vehicleId,
+    );
+    const equipment = ((body.equipment as EquipmentInput[]) ?? []).filter(
+      (item: EquipmentInput) => item.equipmentId,
+    );
 
     if (
       !zap_st ||
@@ -66,12 +71,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Manjkajoči ali neveljavni podatki." }, { status: 400 });
     }
 
-    const participantUserIds = participants.map((item) => Number(item.userId));
-    const participantRoleIds = participants.map((item) => Number(item.roleId));
-    const vehicleIds = vehicles.map((item) => Number(item.vehicleId));
-    const vehicleCrewUserIds = vehicles.flatMap((item) => item.crew.map((crew) => Number(crew.userId)));
-    const vehicleCrewRoleIds = vehicles.flatMap((item) => item.crew.map((crew) => Number(crew.roleId)));
-    const equipmentIds = equipment.map((item) => Number(item.equipmentId));
+    const participantUserIds = participants.map((item: ParticipantInput) => Number(item.userId));
+    const participantRoleIds = participants.map((item: ParticipantInput) => Number(item.roleId));
+    const vehicleIds = vehicles.map((item: VehicleInput) => Number(item.vehicleId));
+    const vehicleCrewUserIds = vehicles.flatMap((item: VehicleInput) =>
+      item.crew.map((crew: VehicleCrewInput) => Number(crew.userId)),
+    );
+    const vehicleCrewRoleIds = vehicles.flatMap((item: VehicleInput) =>
+      item.crew.map((crew: VehicleCrewInput) => Number(crew.roleId)),
+    );
+    const equipmentIds = equipment.map((item: EquipmentInput) => Number(item.equipmentId));
 
     if (new Set(participantUserIds).size !== participantUserIds.length) {
       return NextResponse.json({ error: "Isti član je vpisan večkrat med prisotnimi." }, { status: 400 });
@@ -151,7 +160,7 @@ export async function POST(req: Request) {
 
     const participantIdSet = new Set(participantUserIds);
     for (const vehicle of vehicles) {
-      const crewIds = vehicle.crew.map((item) => Number(item.userId));
+      const crewIds = vehicle.crew.map((item: VehicleCrewInput) => Number(item.userId));
       if (new Set(crewIds).size !== crewIds.length) {
         return NextResponse.json({ error: "Isti član je v istem vozilu dodan večkrat." }, { status: 400 });
       }
@@ -176,7 +185,7 @@ export async function POST(req: Request) {
 
     const durationHours = Math.round((((konec.getTime() - zacetek.getTime()) / 36e5) * 100)) / 100;
 
-    const created = await prisma.$transaction(async (tx) => {
+    const created = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const intervention = await tx.intervencija.create({
         data: {
           zap_st,
@@ -194,7 +203,7 @@ export async function POST(req: Request) {
 
       if (participants.length > 0) {
         await tx.intervencije_uporabnik.createMany({
-          data: participants.map((item) => ({
+          data: participants.map((item: ParticipantInput) => ({
             id_i: intervention.id_i,
             id_u: Number(item.userId),
             id_vni: Number(item.roleId),
@@ -213,8 +222,8 @@ export async function POST(req: Request) {
         if (vehicle.crew.length > 0) {
           await tx.intervencije_vozila_uporabniki.createMany({
             data: vehicle.crew
-              .filter((crew) => crew.userId && crew.roleId)
-              .map((crew) => ({
+              .filter((crew: VehicleCrewInput) => crew.userId && crew.roleId)
+              .map((crew: VehicleCrewInput) => ({
                 id_iv: createdVehicle.id_iv,
                 id_u: Number(crew.userId),
                 id_vvv: Number(crew.roleId),
@@ -225,7 +234,7 @@ export async function POST(req: Request) {
 
       if (equipment.length > 0) {
         await tx.intervencija_oprema.createMany({
-          data: equipment.map((item) => ({
+          data: equipment.map((item: EquipmentInput) => ({
             id_i: intervention.id_i,
             id_o: Number(item.equipmentId),
             kolicina: Number(item.quantity),
