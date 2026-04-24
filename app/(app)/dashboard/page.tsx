@@ -93,7 +93,12 @@ export default async function DashboardPage() {
       count: row._count.id_i,
       tip: types.find((entry: TypeRow) => entry.id_it === row.id_it)?.tip ?? "Neznano",
     }))
-    .sort((a, b) => b.count - a.count);
+    .sort(
+      (
+        a: { id_it: number; count: number; tip: string },
+        b: { id_it: number; count: number; tip: string },
+      ) => b.count - a.count,
+    );
 
   const currentYearLabel = now.getFullYear();
 
