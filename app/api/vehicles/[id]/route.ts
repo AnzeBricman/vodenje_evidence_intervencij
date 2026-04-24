@@ -4,6 +4,15 @@ import { authOptions } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { ROLES } from "@/lib/roles";
 
+type InterventionVehicleRow = {
+  id_iv: number;
+};
+
+type TxClient = Pick<
+  typeof prisma,
+  "intervencije_vozila_uporabniki" | "intervencije_vozila" | "vozilo"
+>;
+
 function canManageVehicles(role?: string) {
   return role === ROLES.ADMIN;
 }
@@ -93,9 +102,11 @@ export async function DELETE(
       select: { id_iv: true },
     });
 
-    const linkedIds = linkedInterventionVehicles.map((item) => item.id_iv);
+    const linkedIds = linkedInterventionVehicles.map(
+      (item: InterventionVehicleRow) => item.id_iv,
+    );
 
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: TxClient) => {
       if (linkedIds.length > 0) {
         await tx.intervencije_vozila_uporabniki.deleteMany({
           where: { id_iv: { in: linkedIds } },
