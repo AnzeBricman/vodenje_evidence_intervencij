@@ -28,7 +28,7 @@ function Panel({
 export default async function AdminPage() {
   const user = await requireUser();
 
-  if ((user as any).role !== "SUPER_ADMIN") {
+  if ((user as { role?: string }).role !== "SUPER_ADMIN") {
     redirect("/dashboard");
   }
 
@@ -43,6 +43,8 @@ export default async function AdminPage() {
     }),
     prisma.uporabnik.count(),
   ]);
+
+  type SocietyRow = (typeof societies)[number];
 
   return (
     <div className="space-y-6">
@@ -93,7 +95,7 @@ export default async function AdminPage() {
           subtitle="Ustvari začetni račun in mu določi vlogo znotraj izbranega društva."
         >
           <CreateSocietyUserForm
-            societies={societies.map((society) => ({
+            societies={societies.map((society: SocietyRow) => ({
               id: society.id_gd,
               label: society.ime,
             }))}
@@ -108,7 +110,7 @@ export default async function AdminPage() {
           </div>
         ) : (
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {societies.map((society) => (
+            {societies.map((society: SocietyRow) => (
               <div
                 key={society.id_gd}
                 className="rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-4"
