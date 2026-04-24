@@ -1,7 +1,7 @@
-import { prisma } from "@/lib/prisma";
-import { notFound } from "next/navigation";
 import Link from "next/link";
 import React from "react";
+import { notFound } from "next/navigation";
+import { prisma } from "@/lib/prisma";
 import { formatDurationHours } from "@/lib/format-duration";
 
 type TabKey = "osnovno" | "prisotnost" | "oprema" | "stroski";
@@ -13,7 +13,6 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: "stroski", label: "Stroški" },
 ];
 
-// Helper za € format (vedno na voljo v tej datoteki)
 function eur(n: number) {
   return new Intl.NumberFormat("sl-SI", {
     style: "currency",
@@ -42,7 +41,6 @@ export default async function InterventionDetailPage({
       status: true,
       intervencija_tip: true,
       tip_casa: true,
-
       intervencije_uporabnik: {
         include: {
           uporabnik: true,
@@ -50,7 +48,6 @@ export default async function InterventionDetailPage({
         },
         orderBy: { id: "asc" },
       },
-
       intervencije_vozila: {
         include: {
           vozilo: {
@@ -66,7 +63,6 @@ export default async function InterventionDetailPage({
         },
         orderBy: { id_iv: "asc" },
       },
-
       intervencija_oprema: {
         include: {
           oprema: {
@@ -80,47 +76,58 @@ export default async function InterventionDetailPage({
 
   if (!intervencija) notFound();
 
+  type PrisotnostRow = (typeof intervencija.intervencije_uporabnik)[number];
+  type VoziloRow = (typeof intervencija.intervencije_vozila)[number];
+  type VoziloMemberRow = VoziloRow["intervencije_vozila_uporabniki"][number];
+  type OpremaRow = (typeof intervencija.intervencija_oprema)[number];
 
-  const trajanje = Number(intervencija.trajanje_ur ?? 0); // ure
+  const trajanje = Number(intervencija.trajanje_ur ?? 0);
   const skupneUre = formatDurationHours(trajanje);
 
   const claniCount = intervencija.intervencije_uporabnik.length;
   const vozilaCount = intervencija.intervencije_vozila.length;
   const opremaCount = intervencija.intervencija_oprema.length;
 
- 
   const inVehicleUserIds = new Set(
-    intervencija.intervencije_vozila.flatMap((iv) =>
-      iv.intervencije_vozila_uporabniki.map((x) => x.id_u)
-    )
+    intervencija.intervencije_vozila.flatMap((iv: VoziloRow) =>
+      iv.intervencije_vozila_uporabniki.map((member: VoziloMemberRow) => member.id_u),
+    ),
   );
 
   const nedodeljeni = intervencija.intervencije_uporabnik.filter(
-    (x) => !inVehicleUserIds.has(x.id_u)
+    (entry: PrisotnostRow) => !inVehicleUserIds.has(entry.id_u),
   );
 
- 
   const cenaTipaCasa = Number(intervencija.tip_casa?.cena_na_uro ?? 0);
-
   const stroskiMostvo = claniCount * trajanje * cenaTipaCasa;
 
-  const vozilaRows = intervencija.intervencije_vozila.map((iv) => {
-    const cenaVozila = Number((iv.vozilo as any).cena_na_uro ?? 0);
+  const vozilaRows = intervencija.intervencije_vozila.map((iv: VoziloRow) => {
+    const cenaVozila = Number((iv.vozilo as VoziloRow["vozilo"] & { cena_na_uro?: unknown }).cena_na_uro ?? 0);
     const strosek = trajanje * cenaVozila;
+
     return { iv, cenaVozila, strosek };
   });
-  const stroskiVozila = vozilaRows.reduce((s, r) => s + r.strosek, 0);
 
-  const opremaRows = intervencija.intervencija_oprema.map((io) => {
-    const cenaOpreme = Number((io.oprema as any).cena_na_uro ?? 0);
+  type VozilaCostRow = (typeof vozilaRows)[number];
+  const stroskiVozila = vozilaRows.reduce(
+    (sum: number, row: VozilaCostRow) => sum + row.strosek,
+    0,
+  );
+
+  const opremaRows = intervencija.intervencija_oprema.map((io: OpremaRow) => {
+    const cenaOpreme = Number((io.oprema as OpremaRow["oprema"] & { cena_na_uro?: unknown }).cena_na_uro ?? 0);
     const ure = Number(io.ure_uporabe ?? 0);
     const kolicina = Number(io.kolicina ?? 0);
-
     const strosek = kolicina * ure * cenaOpreme;
 
     return { io, cenaOpreme, ure, kolicina, strosek };
   });
-  const stroskiOprema = opremaRows.reduce((s, r) => s + r.strosek, 0);
+
+  type OpremaCostRow = (typeof opremaRows)[number];
+  const stroskiOprema = opremaRows.reduce(
+    (sum: number, row: OpremaCostRow) => sum + row.strosek,
+    0,
+  );
 
   const skupniStroski = stroskiMostvo + stroskiVozila + stroskiOprema;
 
@@ -129,10 +136,7 @@ export default async function InterventionDetailPage({
       <div className="flex items-start justify-between gap-6">
         <div className="space-y-2">
           <div className="text-sm text-gray-500">
-            <Link
-              href="/interventions"
-              className="inline-flex items-center gap-2 hover:underline"
-            >
+            <Link href="/interventions" className="inline-flex items-center gap-2 hover:underline">
               ← Nazaj na seznam
             </Link>
           </div>
@@ -151,22 +155,21 @@ export default async function InterventionDetailPage({
       </div>
 
       <div className="grid gap-6 xl:grid-cols-4">
-        <div className="xl:col-span-3 space-y-4">
+        <div className="space-y-4 xl:col-span-3">
           <div className="inline-flex rounded-xl border bg-white p-1">
-            {TABS.map((t) => {
-              const active = tab === t.key;
+            {TABS.map((entry: { key: TabKey; label: string }) => {
+              const active = tab === entry.key;
+
               return (
                 <Link
-                  key={t.key}
-                  href={`/interventions/${intervencija.id_i}?tab=${t.key}`}
+                  key={entry.key}
+                  href={`/interventions/${intervencija.id_i}?tab=${entry.key}`}
                   className={[
                     "rounded-lg px-4 py-2 text-sm transition",
-                    active
-                      ? "bg-gray-100 font-medium"
-                      : "text-gray-600 hover:bg-gray-50",
+                    active ? "bg-gray-100 font-medium" : "text-gray-600 hover:bg-gray-50",
                   ].join(" ")}
                 >
-                  {t.label}
+                  {entry.label}
                 </Link>
               );
             })}
@@ -176,10 +179,7 @@ export default async function InterventionDetailPage({
             <SectionCard title="Osnovni podatki">
               <div className="grid gap-4 sm:grid-cols-2">
                 <Info label="Številka intervencije" value={intervencija.zap_st} />
-                <Info
-                  label="Vrsta"
-                  value={intervencija.intervencija_tip?.tip ?? "—"}
-                />
+                <Info label="Vrsta" value={intervencija.intervencija_tip?.tip ?? "—"} />
                 <Info
                   label="Začetek"
                   value={new Date(intervencija.zacetek).toLocaleString("sl-SI")}
@@ -188,10 +188,7 @@ export default async function InterventionDetailPage({
                   label="Konec"
                   value={new Date(intervencija.konec).toLocaleString("sl-SI")}
                 />
-                <Info
-                  label="Tip časa"
-                  value={intervencija.tip_casa?.ime_tipa ?? "—"}
-                />
+                <Info label="Tip časa" value={intervencija.tip_casa?.ime_tipa ?? "—"} />
                 <Info label="Trajanje" value={formatDurationHours(trajanje)} />
               </div>
             </SectionCard>
@@ -211,14 +208,14 @@ export default async function InterventionDetailPage({
                   <Empty text="Ni vpisanih prisotnih članov." />
                 ) : (
                   <div className="divide-y">
-                    {intervencija.intervencije_uporabnik.map((p) => (
-                      <div key={p.id} className="flex items-center justify-between py-3">
+                    {intervencija.intervencije_uporabnik.map((entry: PrisotnostRow) => (
+                      <div key={entry.id} className="flex items-center justify-between py-3">
                         <div className="min-w-0">
-                          <div className="text-sm font-medium">{p.uporabnik.ime}</div>
-                          <div className="text-xs text-gray-500">{p.uporabnik.email}</div>
+                          <div className="text-sm font-medium">{entry.uporabnik.ime}</div>
+                          <div className="text-xs text-gray-500">{entry.uporabnik.email}</div>
                         </div>
                         <span className="rounded-full border px-3 py-1 text-xs text-gray-700">
-                          {p.vloga_na_intervenciji?.ime_vloge ?? "—"}
+                          {entry.vloga_na_intervenciji?.ime_vloge ?? "—"}
                         </span>
                       </div>
                     ))}
@@ -231,7 +228,7 @@ export default async function InterventionDetailPage({
                   <Empty text="Na intervenciji še ni dodanih vozil." />
                 ) : (
                   <div className="space-y-4">
-                    {intervencija.intervencije_vozila.map((iv) => (
+                    {intervencija.intervencije_vozila.map((iv: VoziloRow) => (
                       <div key={iv.id_iv} className="rounded-xl border p-4">
                         <div className="mb-3">
                           <div className="text-sm font-semibold">
@@ -246,19 +243,17 @@ export default async function InterventionDetailPage({
                         </div>
 
                         {iv.intervencije_vozila_uporabniki.length === 0 ? (
-                          <div className="text-sm text-gray-500">
-                            Ni dodeljenih članov v vozilo.
-                          </div>
+                          <div className="text-sm text-gray-500">Ni dodeljenih članov v vozilo.</div>
                         ) : (
                           <div className="divide-y">
-                            {iv.intervencije_vozila_uporabniki.map((m) => (
+                            {iv.intervencije_vozila_uporabniki.map((member: VoziloMemberRow) => (
                               <div
-                                key={m.id_ivu}
+                                key={member.id_ivu}
                                 className="flex items-center justify-between py-2"
                               >
-                                <div className="text-sm">{m.uporabnik.ime}</div>
+                                <div className="text-sm">{member.uporabnik.ime}</div>
                                 <span className="rounded-full border px-3 py-1 text-xs">
-                                  {m.vloga_v_vozilu?.ime_vloge ?? "—"}
+                                  {member.vloga_v_vozilu?.ime_vloge ?? "—"}
                                 </span>
                               </div>
                             ))}
@@ -273,10 +268,7 @@ export default async function InterventionDetailPage({
           )}
 
           {tab === "oprema" && (
-            <SectionCard
-              title={`Oprema (${opremaCount})`}
-              subtitle="Porabljena oprema na intervenciji"
-            >
+            <SectionCard title={`Oprema (${opremaCount})`} subtitle="Porabljena oprema na intervenciji">
               {opremaCount === 0 ? (
                 <Empty text="Ni vpisane opreme." />
               ) : (
@@ -293,19 +285,17 @@ export default async function InterventionDetailPage({
                       </tr>
                     </thead>
                     <tbody>
-                      {opremaRows.map((r) => (
-                        <tr key={r.io.id_io} className="border-b last:border-b-0">
-                          <td className="py-3 pr-4 font-medium">
-                            {r.io.oprema.ime_opreme}
-                          </td>
+                      {opremaRows.map((row: OpremaCostRow) => (
+                        <tr key={row.io.id_io} className="border-b last:border-b-0">
+                          <td className="py-3 pr-4 font-medium">{row.io.oprema.ime_opreme}</td>
                           <td className="py-3 pr-4 text-gray-500">
-                            {r.io.oprema.kategorija_oprema?.ime_kategorije ?? "—"}
+                            {row.io.oprema.kategorija_oprema?.ime_kategorije ?? "—"}
                           </td>
-                          <td className="py-3 pr-4">{r.kolicina}</td>
-                          <td className="py-3 pr-4">{formatDurationHours(r.ure)}</td>
-                          <td className="py-3 pr-4">{eur(r.cenaOpreme)}</td>
+                          <td className="py-3 pr-4">{row.kolicina}</td>
+                          <td className="py-3 pr-4">{formatDurationHours(row.ure)}</td>
+                          <td className="py-3 pr-4">{eur(row.cenaOpreme)}</td>
                           <td className="py-3 pr-0 text-right font-semibold">
-                            {eur(r.strosek)}
+                            {eur(row.strosek)}
                           </td>
                         </tr>
                       ))}
@@ -326,7 +316,6 @@ export default async function InterventionDetailPage({
             </SectionCard>
           )}
 
-
           {tab === "stroski" && (
             <SectionCard title="Stroški" subtitle="Moštvo + vozila + oprema">
               <div className="overflow-x-auto">
@@ -343,36 +332,36 @@ export default async function InterventionDetailPage({
                     <tr className="border-b">
                       <td className="py-3 pr-4 font-medium">Moštvo</td>
                       <td className="py-3 pr-4 text-gray-500">
-                        {claniCount} član(ov) × {formatDurationHours(trajanje)} ×{" "}
-                        {eur(cenaTipaCasa)}/h ({intervencija.tip_casa?.ime_tipa})
+                        {claniCount} član(ov) × {formatDurationHours(trajanje)} × {eur(cenaTipaCasa)}
+                        /h ({intervencija.tip_casa?.ime_tipa})
                       </td>
                       <td className="py-3 pr-0 text-right font-semibold">
                         {eur(stroskiMostvo)}
                       </td>
                     </tr>
 
-                    {vozilaRows.map((r) => (
-                      <tr key={`v-${r.iv.id_iv}`} className="border-b">
+                    {vozilaRows.map((row: VozilaCostRow) => (
+                      <tr key={`v-${row.iv.id_iv}`} className="border-b">
                         <td className="py-3 pr-4 font-medium">Vozilo</td>
                         <td className="py-3 pr-4 text-gray-500">
-                          {r.iv.vozilo.ime} × {formatDurationHours(trajanje)} ×{" "}
-                          {eur(r.cenaVozila)}/h
+                          {row.iv.vozilo.ime} × {formatDurationHours(trajanje)} ×{" "}
+                          {eur(row.cenaVozila)}/h
                         </td>
                         <td className="py-3 pr-0 text-right font-semibold">
-                          {eur(r.strosek)}
+                          {eur(row.strosek)}
                         </td>
                       </tr>
                     ))}
 
-                    {opremaRows.map((r) => (
-                      <tr key={`o-${r.io.id_io}`} className="border-b">
+                    {opremaRows.map((row: OpremaCostRow) => (
+                      <tr key={`o-${row.io.id_io}`} className="border-b">
                         <td className="py-3 pr-4 font-medium">Oprema</td>
                         <td className="py-3 pr-4 text-gray-500">
-                          {r.io.oprema.ime_opreme} — {r.kolicina} kos ×{" "}
-                          {formatDurationHours(r.ure)} × {eur(r.cenaOpreme)}/h
+                          {row.io.oprema.ime_opreme} — {row.kolicina} kos ×{" "}
+                          {formatDurationHours(row.ure)} × {eur(row.cenaOpreme)}/h
                         </td>
                         <td className="py-3 pr-0 text-right font-semibold">
-                          {eur(r.strosek)}
+                          {eur(row.strosek)}
                         </td>
                       </tr>
                     ))}
