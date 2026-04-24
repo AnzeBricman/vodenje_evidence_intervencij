@@ -4,6 +4,8 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import type { Role } from "@/lib/roles";
 
+const authSecret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
+
 const roleMap: Record<string, Role> = {
   SuperAdmin: "SUPER_ADMIN",
   "Super Admin": "SUPER_ADMIN",
@@ -15,6 +17,7 @@ const roleMap: Record<string, Role> = {
 };
 
 export const authOptions: NextAuthOptions = {
+  secret: authSecret,
   pages: {
     signIn: "/login",
   },

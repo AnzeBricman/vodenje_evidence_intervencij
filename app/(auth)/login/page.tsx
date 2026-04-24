@@ -66,7 +66,7 @@ export default function LoginPage() {
                 return;
               }
 
-              router.push(res?.url ?? "/post-login");
+              window.location.assign(res?.url ?? "/post-login");
             }}
           >
             Prijava
