@@ -1,13 +1,16 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import type { PrismaClient } from "@prisma/client";
 import { authOptions } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { ROLES } from "@/lib/roles";
 
-type TxClient = Omit<
-  PrismaClient,
-  "$connect" | "$disconnect" | "$on" | "$transaction" | "$extends"
+type TxClient = Pick<
+  typeof prisma,
+  | "intervencija"
+  | "intervencije_uporabnik"
+  | "intervencije_vozila"
+  | "intervencije_vozila_uporabniki"
+  | "intervencija_oprema"
 >;
 
 function canManageInterventions(role?: string) {
