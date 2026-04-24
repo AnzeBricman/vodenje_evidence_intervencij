@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ROLE_LABEL, ROLES } from "@/lib/roles";
+import { ROLE_LABEL, ROLES, type Role } from "@/lib/roles";
 
 export default function CreateUserForm() {
   const router = useRouter();
@@ -102,7 +102,7 @@ export default function CreateUserForm() {
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
               >
-                {roleOptions.map((roleOption) => (
+                {roleOptions.map((roleOption: Role) => (
                   <option key={roleOption} value={roleOption}>
                     {ROLE_LABEL[roleOption]}
                   </option>

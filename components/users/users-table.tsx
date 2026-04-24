@@ -54,7 +54,7 @@ export default function UsersTable({ users, currentUserId }: UsersTableProps) {
             </tr>
           </thead>
           <tbody>
-            {filteredUsers.map((u) => (
+            {filteredUsers.map((u: UserRow) => (
               <tr
                 key={u.id_u}
                 className="bg-gray-50/80 shadow-sm ring-1 ring-gray-100 transition hover:bg-white hover:ring-red-100"

@@ -272,7 +272,7 @@ export default function CreateInterventionForm({
               onChange={(e) => setStatusId(e.target.value)}
               required
             >
-              {statuses.map((status) => (
+              {statuses.map((status: Option) => (
                 <option key={status.id} value={status.id}>
                   {status.label}
                 </option>
@@ -309,7 +309,7 @@ export default function CreateInterventionForm({
               onChange={(e) => setTypeId(e.target.value)}
               required
             >
-              {interventionTypes.map((type) => (
+              {interventionTypes.map((type: Option) => (
                 <option key={type.id} value={type.id}>
                   {type.label}
                 </option>
@@ -347,7 +347,7 @@ export default function CreateInterventionForm({
               onChange={(e) => setTimeTypeId(e.target.value)}
               required
             >
-              {timeTypes.map((timeType) => (
+              {timeTypes.map((timeType: Option) => (
                 <option key={timeType.id} value={timeType.id}>
                   {timeType.label}
                 </option>
@@ -359,7 +359,7 @@ export default function CreateInterventionForm({
 
       <Section title="Prisotni člani" subtitle="Dodaj člane in njihove vloge na intervenciji.">
         <div className="space-y-3">
-          {participants.map((row, index) => (
+          {participants.map((row: ParticipantRow, index: number) => (
             <div key={index} className="grid gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4 md:grid-cols-[1.6fr_1fr_auto]">
               <select
                 className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
@@ -367,7 +367,7 @@ export default function CreateInterventionForm({
                 onChange={(e) => updateParticipant(index, "userId", e.target.value)}
               >
                 <option value="">Izberi člana</option>
-                {users.map((user) => (
+                {users.map((user: UserOption) => (
                   <option key={user.id} value={user.id}>
                     {user.label} ({user.email})
                   </option>
@@ -379,7 +379,7 @@ export default function CreateInterventionForm({
                 value={row.roleId}
                 onChange={(e) => updateParticipant(index, "roleId", e.target.value)}
               >
-                {interventionRoles.map((role) => (
+                {interventionRoles.map((role: Option) => (
                   <option key={role.id} value={role.id}>
                     {role.label}
                   </option>
@@ -408,7 +408,7 @@ export default function CreateInterventionForm({
 
       <Section title="Vozila" subtitle="Dodaj vozila in posadko v posameznem vozilu.">
         <div className="space-y-4">
-          {vehicleAssignments.map((vehicleRow, vehicleIndex) => (
+          {vehicleAssignments.map((vehicleRow: VehicleAssignmentRow, vehicleIndex: number) => (
             <div key={vehicleIndex} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
               <div className="mb-3 grid gap-3 md:grid-cols-[1fr_auto]">
                 <select
@@ -417,7 +417,7 @@ export default function CreateInterventionForm({
                   onChange={(e) => updateVehicle(vehicleIndex, e.target.value)}
                 >
                   <option value="">Izberi vozilo</option>
-                  {vehicles.map((vehicle) => (
+                  {vehicles.map((vehicle: VehicleOption) => (
                     <option key={vehicle.id} value={vehicle.id}>
                       {vehicle.label} {vehicle.registration ? `(${vehicle.registration})` : ""}
                     </option>
@@ -434,7 +434,7 @@ export default function CreateInterventionForm({
               </div>
 
               <div className="space-y-3">
-                {vehicleRow.crew.map((crewRow, crewIndex) => (
+                {vehicleRow.crew.map((crewRow: VehicleCrewRow, crewIndex: number) => (
                   <div
                     key={crewIndex}
                     className="grid gap-3 rounded-xl border border-gray-200 bg-white p-3 md:grid-cols-[1.6fr_1fr_auto]"
@@ -447,7 +447,7 @@ export default function CreateInterventionForm({
                       }
                     >
                       <option value="">Izberi člana</option>
-                      {users.map((user) => (
+                      {users.map((user: UserOption) => (
                         <option key={user.id} value={user.id}>
                           {user.label}
                         </option>
@@ -461,7 +461,7 @@ export default function CreateInterventionForm({
                         updateCrewMember(vehicleIndex, crewIndex, "roleId", e.target.value)
                       }
                     >
-                      {vehicleRoles.map((role) => (
+                      {vehicleRoles.map((role: Option) => (
                         <option key={role.id} value={role.id}>
                           {role.label}
                         </option>
@@ -501,7 +501,7 @@ export default function CreateInterventionForm({
 
       <Section title="Oprema" subtitle="Dodaj uporabljeno opremo, količino in ure uporabe.">
         <div className="space-y-3">
-          {equipmentRows.map((row, index) => (
+          {equipmentRows.map((row: EquipmentRow, index: number) => (
             <div
               key={index}
               className="grid gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4 md:grid-cols-[1.8fr_0.8fr_0.8fr_auto]"
@@ -512,7 +512,7 @@ export default function CreateInterventionForm({
                 onChange={(e) => updateEquipment(index, "equipmentId", e.target.value)}
               >
                 <option value="">Izberi opremo</option>
-                {equipment.map((item) => (
+                {equipment.map((item: EquipmentOption) => (
                   <option key={item.id} value={item.id}>
                     {item.label}
                   </option>

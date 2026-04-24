@@ -15,6 +15,9 @@ const nav = [
 
 const superAdminNav = [{ href: "/admin", label: "Sistemski panel", icon: Shield }] as const;
 
+type NavItem = (typeof nav)[number];
+type SuperAdminNavItem = (typeof superAdminNav)[number];
+
 function initials(name?: string | null) {
   const n = (name ?? "").trim();
   if (!n) return "??";
@@ -68,11 +71,11 @@ export default function Sidebar() {
 
       <nav className="space-y-1 px-4 py-4">
         {(isSuperAdmin ? superAdminNav : nav)
-          .filter((item) => {
+          .filter((item: NavItem | SuperAdminNavItem) => {
             if (item.href === "/users") return canSeeUsers;
             return true;
           })
-          .map((item) => {
+          .map((item: NavItem | SuperAdminNavItem) => {
             const active = pathname.startsWith(item.href);
             const Icon = item.icon;
 

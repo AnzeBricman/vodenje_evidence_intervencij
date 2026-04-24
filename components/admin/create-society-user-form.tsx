@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ROLE_LABEL, ROLES } from "@/lib/roles";
+import { ROLE_LABEL, ROLES, type Role } from "@/lib/roles";
 
 type SocietyOption = {
   id: number;
@@ -68,7 +68,7 @@ export default function CreateSocietyUserForm({
           className="rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100"
           required
         >
-          {societies.map((society) => (
+          {societies.map((society: SocietyOption) => (
             <option key={society.id} value={society.id}>
               {society.label}
             </option>
@@ -106,7 +106,7 @@ export default function CreateSocietyUserForm({
             onChange={(e) => setRole(e.target.value)}
             className="rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100"
           >
-            {roleOptions.map((roleOption) => (
+            {roleOptions.map((roleOption: Role) => (
               <option key={roleOption} value={roleOption}>
                 {ROLE_LABEL[roleOption]}
               </option>

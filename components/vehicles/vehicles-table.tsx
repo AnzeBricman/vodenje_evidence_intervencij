@@ -119,7 +119,7 @@ export default function VehiclesTable({
             </tr>
           </thead>
           <tbody>
-            {filteredVehicles.map((v) => (
+            {filteredVehicles.map((v: VehicleRow) => (
               <tr
                 key={v.id_v}
                 className="bg-gray-50/80 shadow-sm ring-1 ring-gray-100 transition hover:bg-white hover:ring-red-100"
@@ -135,7 +135,7 @@ export default function VehiclesTable({
                       disabled={busyId === v.id_v}
                       onChange={(e) => updateStatus(v.id_v, Number(e.target.value))}
                     >
-                      {vehicleStatuses.map((status) => (
+                      {vehicleStatuses.map((status: VehicleStatusOption) => (
                         <option key={status.id} value={status.id}>
                           {status.label}
                         </option>

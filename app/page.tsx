@@ -20,6 +20,8 @@ const features = [
   },
 ];
 
+type Feature = (typeof features)[number];
+
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-[#fafafa] px-5 py-16">
@@ -57,7 +59,7 @@ export default function HomePage() {
         </section>
 
         <section className="mt-10 grid w-full max-w-5xl gap-6 md:grid-cols-2 xl:grid-cols-4">
-          {features.map((feature) => (
+          {features.map((feature: Feature) => (
             <article
               key={feature.title}
               className="rounded-3xl border border-slate-200 bg-white p-6 text-center shadow-[0_18px_40px_-34px_rgba(15,23,42,0.22)]"

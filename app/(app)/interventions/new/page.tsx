@@ -37,26 +37,41 @@ export default async function NewInterventionPage() {
     }),
   ]);
 
+  type StatusRow = (typeof statuses)[number];
+  type InterventionTypeRow = (typeof interventionTypes)[number];
+  type TimeTypeRow = (typeof timeTypes)[number];
+  type UserRow = (typeof users)[number];
+  type InterventionRoleRow = (typeof interventionRoles)[number];
+  type VehicleRow = (typeof vehicles)[number];
+  type VehicleRoleRow = (typeof vehicleRoles)[number];
+  type EquipmentRow = (typeof equipment)[number];
+
   return (
     <CreateInterventionForm
-      statuses={statuses.map((item) => ({ id: item.id_s, label: item.ime_statusa }))}
-      interventionTypes={interventionTypes.map((item) => ({ id: item.id_it, label: item.tip }))}
-      timeTypes={timeTypes.map((item) => ({ id: item.id_tc, label: item.ime_tipa }))}
-      users={users.map((item) => ({ id: item.id_u, label: item.ime, email: item.email }))}
-      interventionRoles={interventionRoles.map((item) => ({
+      statuses={statuses.map((item: StatusRow) => ({ id: item.id_s, label: item.ime_statusa }))}
+      interventionTypes={interventionTypes.map((item: InterventionTypeRow) => ({
+        id: item.id_it,
+        label: item.tip,
+      }))}
+      timeTypes={timeTypes.map((item: TimeTypeRow) => ({
+        id: item.id_tc,
+        label: item.ime_tipa,
+      }))}
+      users={users.map((item: UserRow) => ({ id: item.id_u, label: item.ime, email: item.email }))}
+      interventionRoles={interventionRoles.map((item: InterventionRoleRow) => ({
         id: item.id_vni,
         label: item.ime_vloge,
       }))}
-      vehicles={vehicles.map((item) => ({
+      vehicles={vehicles.map((item: VehicleRow) => ({
         id: item.id_v,
         label: item.ime,
         registration: item.registrska_st,
       }))}
-      vehicleRoles={vehicleRoles.map((item) => ({
+      vehicleRoles={vehicleRoles.map((item: VehicleRoleRow) => ({
         id: item.id_vvv,
         label: item.ime_vloge,
       }))}
-      equipment={equipment.map((item) => ({ id: item.id_o, label: item.ime_opreme }))}
+      equipment={equipment.map((item: EquipmentRow) => ({ id: item.id_o, label: item.ime_opreme }))}
     />
   );
 }

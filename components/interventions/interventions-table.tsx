@@ -144,7 +144,7 @@ export default function InterventionsTable({
             </tr>
           </thead>
           <tbody>
-            {filteredInterventions.map((item) => (
+            {filteredInterventions.map((item: InterventionRow) => (
               <tr
                 key={item.id_i}
                 className="bg-gray-50/80 shadow-sm ring-1 ring-gray-100 transition hover:bg-white hover:ring-red-100"
@@ -167,7 +167,7 @@ export default function InterventionsTable({
                       disabled={busyId === item.id_i}
                       onChange={(e) => updateStatus(item.id_i, Number(e.target.value))}
                     >
-                      {statuses.map((status) => (
+                      {statuses.map((status: StatusOption) => (
                         <option key={status.id} value={status.id}>
                           {status.label}
                         </option>

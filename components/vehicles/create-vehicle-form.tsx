@@ -137,7 +137,7 @@ export default function CreateVehicleForm({
                 onChange={(e) => setTypeId(e.target.value)}
                 required
               >
-                {vehicleTypes.map((type) => (
+                {vehicleTypes.map((type: Option) => (
                   <option key={type.id} value={type.id}>
                     {type.label}
                   </option>
@@ -151,7 +151,7 @@ export default function CreateVehicleForm({
                 onChange={(e) => setStatusId(e.target.value)}
                 required
               >
-                {vehicleStatuses.map((status) => (
+                {vehicleStatuses.map((status: Option) => (
                   <option key={status.id} value={status.id}>
                     {status.label}
                   </option>

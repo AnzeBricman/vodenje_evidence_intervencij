@@ -119,7 +119,7 @@ export default function EquipmentTable({
             </tr>
           </thead>
           <tbody>
-            {filteredEquipment.map((item) => (
+            {filteredEquipment.map((item: EquipmentRow) => (
               <tr
                 key={item.id_o}
                 className="bg-gray-50/80 shadow-sm ring-1 ring-gray-100 transition hover:bg-white hover:ring-red-100"
@@ -139,7 +139,7 @@ export default function EquipmentTable({
                         disabled={busyId === item.id_o}
                         onChange={(e) => updateState(item.id_o, Number(e.target.value))}
                       >
-                        {states.map((state) => (
+                        {states.map((state: StateOption) => (
                           <option key={state.id} value={state.id}>
                             {state.label}
                           </option>

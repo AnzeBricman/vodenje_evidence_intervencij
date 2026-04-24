@@ -137,7 +137,7 @@ export default function CreateEquipmentForm({
                 onChange={(e) => setCategoryId(e.target.value)}
                 required
               >
-                {categories.map((category) => (
+                {categories.map((category: Option) => (
                   <option key={category.id} value={category.id}>
                     {category.label}
                   </option>
@@ -151,7 +151,7 @@ export default function CreateEquipmentForm({
                 onChange={(e) => setStateId(e.target.value)}
                 required
               >
-                {states.map((state) => (
+                {states.map((state: Option) => (
                   <option key={state.id} value={state.id}>
                     {state.label}
                   </option>
