@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import type { Prisma } from "@prisma/client";
+import type { PrismaClient } from "@prisma/client";
 import { authOptions } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { ROLES } from "@/lib/roles";
+
+type TxClient = Omit<
+  PrismaClient,
+  "$connect" | "$disconnect" | "$on" | "$transaction" | "$extends"
+>;
 
 function canManageInterventions(role?: string) {
   return role === ROLES.ADMIN;
@@ -185,7 +190,7 @@ export async function POST(req: Request) {
 
     const durationHours = Math.round((((konec.getTime() - zacetek.getTime()) / 36e5) * 100)) / 100;
 
-    const created = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    const created = await prisma.$transaction(async (tx: TxClient) => {
       const intervention = await tx.intervencija.create({
         data: {
           zap_st,
