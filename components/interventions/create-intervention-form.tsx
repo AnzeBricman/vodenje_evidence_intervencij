@@ -45,6 +45,7 @@ type EquipmentRow = {
   equipmentId: string;
   quantity: string;
   hours: string;
+  note: string;
 };
 
 type Props = {
@@ -178,7 +179,7 @@ export default function CreateInterventionForm({
   };
 
   const addEquipment = () => {
-    setEquipmentRows((prev) => [...prev, { equipmentId: "", quantity: "1", hours: "1" }]);
+    setEquipmentRows((prev) => [...prev, { equipmentId: "", quantity: "1", hours: "1", note: "" }]);
   };
 
   const updateEquipment = (index: number, key: keyof EquipmentRow, value: string) => {
@@ -546,6 +547,17 @@ export default function CreateInterventionForm({
               >
                 Odstrani
               </button>
+
+              <label className="grid gap-2 text-sm md:col-span-4">
+                <span className="text-xs text-gray-600">Komentar za opremo / poškodba</span>
+                <textarea
+                  className="min-h-20 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+                  value={row.note}
+                  onChange={(e) => updateEquipment(index, "note", e.target.value)}
+                  placeholder="npr. poškodovana cev, počena maska, brez posebnosti ..."
+                  maxLength={500}
+                />
+              </label>
             </div>
           ))}
 

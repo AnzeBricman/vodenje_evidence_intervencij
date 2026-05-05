@@ -36,6 +36,7 @@ type EquipmentInput = {
   equipmentId: string;
   quantity: string;
   hours: string;
+  note?: string;
 };
 
 export async function POST(req: Request) {
@@ -186,8 +187,12 @@ export async function POST(req: Request) {
     for (const item of equipment) {
       const quantity = Number(item.quantity);
       const hours = Number(item.hours);
+      const note = (item.note ?? "").toString().trim();
       if (!Number.isFinite(quantity) || quantity <= 0 || !Number.isFinite(hours) || hours < 0) {
         return NextResponse.json({ error: "Količina ali ure uporabe opreme niso veljavne." }, { status: 400 });
+      }
+      if (note.length > 500) {
+        return NextResponse.json({ error: "Komentar za opremo je lahko dolg največ 500 znakov." }, { status: 400 });
       }
     }
 
@@ -247,6 +252,7 @@ export async function POST(req: Request) {
             id_o: Number(item.equipmentId),
             kolicina: Number(item.quantity),
             ure_uporabe: Number(item.hours),
+            opomba: (item.note ?? "").toString().trim() || null,
           })),
         });
       }

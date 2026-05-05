@@ -280,6 +280,7 @@ export default async function InterventionDetailPage({
                         <th className="py-2 pr-4">Kategorija</th>
                         <th className="py-2 pr-4">Količina</th>
                         <th className="py-2 pr-4">Ure</th>
+                        <th className="py-2 pr-4">Komentar</th>
                         <th className="py-2 pr-4">Cena/uro</th>
                         <th className="py-2 pr-0 text-right">Strošek</th>
                       </tr>
@@ -293,6 +294,9 @@ export default async function InterventionDetailPage({
                           </td>
                           <td className="py-3 pr-4">{row.kolicina}</td>
                           <td className="py-3 pr-4">{formatDurationHours(row.ure)}</td>
+                          <td className="max-w-xs py-3 pr-4 text-gray-500">
+                            {row.io.opomba ?? "—"}
+                          </td>
                           <td className="py-3 pr-4">{eur(row.cenaOpreme)}</td>
                           <td className="py-3 pr-0 text-right font-semibold">
                             {eur(row.strosek)}
@@ -302,7 +306,7 @@ export default async function InterventionDetailPage({
                     </tbody>
                     <tfoot>
                       <tr className="border-t">
-                        <td colSpan={5} className="py-3 pr-4 text-right text-gray-600">
+                        <td colSpan={6} className="py-3 pr-4 text-right text-gray-600">
                           Skupaj oprema
                         </td>
                         <td className="py-3 pr-0 text-right font-semibold">

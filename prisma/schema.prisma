@@ -297,6 +297,7 @@ model intervencija_oprema {
 
   kolicina Int
   ure_uporabe Decimal @db.Decimal(6,2)
+  opomba String? @db.VarChar(500)
 
   @@map("intervencija_oprema")
 }
